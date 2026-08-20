@@ -67,7 +67,7 @@ services:
       VKE_TWIN: "1"                           # gateway-backed chat defaults
       VKE_TWIN_MODEL: qwen2.5:1.5b
       VKE_TWIN_TRACK: local
-      VKE_BASES: "Qwen2.5-0.5B-Instruct|0.5|bundled — air-gap safe, trains on CPU in minutes;Llama-3.2-1B-Instruct|1.0|Meta Llama 3.2 — downloads on first use;gemma-3-1b-it|1.0|Google Gemma 3 — downloads on first use;SmolLM2-1.7B-Instruct|1.7|Hugging Face SmolLM2 — downloads on first use;Mistral-7B-Instruct-v0.3|7.0|Mistral 7B — GPU hosts, very slow on CPU"
+      VKE_BASES: "Qwen2.5-0.5B-Instruct|0.5|bundled — air-gap safe, trains on CPU in minutes;Llama-3.2-1B-Instruct|1.0|Meta Llama 3.2 — bundled, air-gap safe;gemma-3-1b-it|1.0|Google Gemma 3 — bundled, air-gap safe;SmolLM2-1.7B-Instruct|1.7|Hugging Face SmolLM2 — bundled, air-gap safe;Mistral-7B-Instruct-v0.3|7.0|Mistral 7B — GPU hosts, very slow on CPU"
       VKE_SEC_PER_ITER: "4"                   # honest CPU wall-clock estimate
       VKE_WATCHTOWER_URL: http://watchtower:8080   # Settings -> Updates -> Update now
       VKE_WATCHTOWER_TOKEN: vke-update

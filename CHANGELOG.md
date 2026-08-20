@@ -2,8 +2,9 @@
 
 ## 1.2.0 · 2026-08-21
 - **A real base-model catalog**: Llama 3.2 1B, Gemma 3 1B, SmolLM2 1.7B and Mistral 7B join
-  Qwen as trainable bases in every shape — downloaded on first use so the bundles stay lean
-  (the baked Qwen 0.5B default keeps the air-gap story intact).
+  Qwen as trainable bases in every shape. The small trio is BUNDLED — baked into the appliance
+  image and pre-fetched at native-mac install — so the training dropdown works fully air-gapped;
+  only Mistral 7B downloads on first use.
 - **Family-correct serving**: trained-model imports now carry the right chat template per
   base family (ChatML · Llama 3 · Gemma · Mistral), and Gemma bases get their system prompt
   folded automatically (Gemma templates take no system role).
