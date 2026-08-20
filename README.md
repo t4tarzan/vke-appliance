@@ -6,6 +6,17 @@ carries *everything*: the app, the AI models, a real trainer, and the sample dat
 
 **Product page / betadoc → https://t4tarzan.github.io/vke-appliance/**
 
+## Native macOS (Apple silicon · MLX · no Docker)
+
+The fastest experience — MLX model serving and ~15-second native LoRA finetunes:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/t4tarzan/vke-appliance/main/install-macos.sh | bash
+```
+
+Installs into `~/.vke` with a single launch agent; manage with `vke status|logs|uninstall`.
+Updates apply in one click from Settings → Updates. Prefer containers? Use the compose quickstart below.
+
 ## Quickstart
 
 ```bash
