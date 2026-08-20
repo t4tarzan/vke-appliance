@@ -1,0 +1,62 @@
+# VKE appliance — fully self-contained: app + AI + trainer + models + datasets.
+#
+#   docker compose up -d        → open http://localhost:9040
+#   (ML engineer: U-ML / PIN 3333 · full roles in the docs)
+#
+# Everything runs locally after the pull — on a Mac or a DGX alike:
+#   · chat + the k8s-sre alias run on the bundled qwen2.5:1.5b (Ollama, CPU/GPU)
+#   · the Training Studio trains FOR REAL: HF LoRA on the bundled Qwen2.5-0.5B base,
+#     merged + imported back into Ollama → the new model appears in the chat dropdown
+#   · sample datasets ship inside (sre-pods 100-row set + the 50-row append set)
+#   · the cluster is a bundled synthetic snapshot (demo mode)
+# No accounts, no keys, nothing leaves the machine.
+services:
+  ollama:
+    image: ghcr.io/t4tarzan/vke-ollama:latest
+    restart: unless-stopped
+    volumes:
+      # named volume over the store: first `up` seeds it from the baked image models,
+      # and models you train/import persist across container recreates
+      - ollama-data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "ls"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+
+  trainer:
+    image: ghcr.io/t4tarzan/vke-trainer:latest
+    depends_on:
+      - ollama
+    restart: unless-stopped
+    volumes:
+      - forge:/forge
+
+  vke:
+    image: ghcr.io/t4tarzan/vke:latest
+    depends_on:
+      - ollama
+      - trainer
+    ports:
+      - "${VKE_PORT:-9040}:9040"
+    environment:
+      VKE_DB: /data/vke.db
+      VKE_CLUSTER_MODE: demo                  # bundled synthetic cluster snapshot
+      VKE_SWITCHBOARD: http://ollama:11434    # the bundled models, OpenAI-compatible
+      VKE_FOUNDRY: http://trainer:9003        # the bundled trainer (Foundry-compatible)
+      VKE_FORGE: /forge                       # shared jobs/data dir with the trainer
+      VKE_TRAINER: "1"                        # training is REAL in this bundle
+      VKE_TWIN: "1"                           # gateway-backed chat defaults
+      VKE_TWIN_MODEL: qwen2.5:1.5b
+      VKE_TWIN_TRACK: local
+      VKE_BASES: "Qwen2.5-0.5B-Instruct|0.5|bundled — trains on CPU in a few minutes"
+      VKE_SEC_PER_ITER: "4"                   # honest CPU wall-clock estimate
+    volumes:
+      - vke-data:/data
+      - forge:/forge
+    restart: unless-stopped
+
+volumes:
+  vke-data:
+  forge:
+  ollama-data:
