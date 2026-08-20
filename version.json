@@ -2,10 +2,9 @@
   "version": "1.1.0",
   "date": "2026-08-21",
   "highlights": [
-    "Settings \u2192 Updates: firmware-style update checks + one-button update",
-    "Settings \u2192 Support tickets: text + images + screen capture, filed to the tracker",
-    "Clusters: auto-detect + Discover + paste-a-kubeconfig + docker visibility",
-    "In-cluster trainer (Helm trainer.enabled) \u2014 train for real inside your cluster",
-    "Namespace-scoped Act grants (rbac.writeNamespaces)"
+    "Settings \u2192 Updates",
+    "Settings \u2192 Support tickets",
+    "Clusters \u2192 attach & Discover",
+    "In-cluster trainer"
   ]
 }
