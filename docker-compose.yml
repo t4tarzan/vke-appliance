@@ -14,6 +14,7 @@ services:
   ollama:
     image: ghcr.io/t4tarzan/vke-ollama:latest
     restart: unless-stopped
+    labels: [com.centurylinklabs.watchtower.enable=true]
     volumes:
       # named volume over the store: first `up` seeds it from the baked image models,
       # and models you train/import persist across container recreates
@@ -29,11 +30,26 @@ services:
     depends_on:
       - ollama
     restart: unless-stopped
+    labels: [com.centurylinklabs.watchtower.enable=true]
     volumes:
       - forge:/forge
 
+  # the update engine behind Settings -> Updates: the Update button asks watchtower
+  # to pull fresh images + recreate the labeled containers (a true in-place update).
+  watchtower:
+    image: containrrr/watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      WATCHTOWER_HTTP_API_UPDATE: "true"
+      WATCHTOWER_HTTP_API_TOKEN: vke-update
+      WATCHTOWER_LABEL_ENABLE: "true"
+      WATCHTOWER_CLEANUP: "true"
+
   vke:
     image: ghcr.io/t4tarzan/vke:latest
+    labels: [com.centurylinklabs.watchtower.enable=true]
     depends_on:
       - ollama
       - trainer
@@ -41,7 +57,9 @@ services:
       - "${VKE_PORT:-9040}:9040"
     environment:
       VKE_DB: /data/vke.db
-      VKE_CLUSTER_MODE: demo                  # bundled synthetic cluster snapshot
+      VKE_CLUSTER_MODE: auto                  # auto: a mounted kubeconfig / in-cluster SA
+                                              # -> live; nothing found -> the bundled demo
+                                              # snapshot (Settings -> Clusters -> Discover)
       VKE_SWITCHBOARD: http://ollama:11434    # the bundled models, OpenAI-compatible
       VKE_FOUNDRY: http://trainer:9003        # the bundled trainer (Foundry-compatible)
       VKE_FORGE: /forge                       # shared jobs/data dir with the trainer
@@ -51,9 +69,14 @@ services:
       VKE_TWIN_TRACK: local
       VKE_BASES: "Qwen2.5-0.5B-Instruct|0.5|bundled — trains on CPU in a few minutes"
       VKE_SEC_PER_ITER: "4"                   # honest CPU wall-clock estimate
+      VKE_WATCHTOWER_URL: http://watchtower:8080   # Settings -> Updates -> Update now
+      VKE_WATCHTOWER_TOKEN: vke-update
     volumes:
       - vke-data:/data
       - forge:/forge
+      # ── attach YOUR environment (uncomment what applies) ──────────────────
+      # - ~/.kube:/root/.kube:ro                       # observe your k8s cluster
+      # - /var/run/docker.sock:/var/run/docker.sock:ro # list this host's containers
     restart: unless-stopped
 
 volumes:

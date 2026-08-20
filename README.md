@@ -57,6 +57,18 @@ Also worth a look: the fenced Action Console + approval queue, the hash-chained 
 (Trust Center → verify the chain), and the Iterative Demo tile, which switches from a staged
 story to your real loss curves once two runs exist.
 
+
+## Updates & support
+
+- **Updates**: Settings → Updates shows the installed version and checks this repo's
+  `version.json` for new releases. The **Update now** button asks the bundled watchtower
+  to pull fresh images and recreate the containers — a true in-place update.
+- **Attach your own environment**: uncomment the `~/.kube` or `docker.sock` mounts in the
+  compose file and VKE observes your real cluster / lists your containers
+  (Settings → Clusters → Discover).
+- **Support**: Settings → Support tickets files an issue on this repo — with text, images,
+  or an in-app screen capture.
+
 ## Operational notes
 
 - `VKE_PORT=8080 docker compose up -d` to change the port.
