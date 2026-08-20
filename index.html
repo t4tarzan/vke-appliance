@@ -214,6 +214,15 @@ open http://localhost:9040   <span style="color:#5BC98C"># sign in: ML engineer 
     <div class="card"><span class="ic">🔄</span><h3>Settings → Updates</h3><p>A firmware-style updater: every install shows its version, polls the public update channel every six hours, and lists what's new with the full changelog. The <b>Update now</b> button is shape-aware — the appliance pulls fresh images and recreates itself in place (watchtower), a native install pulls and restarts with live progress, and a Kubernetes install shows the exact <span class="mono">helm upgrade</span> to run. Air-gapped installs simply stay calm.</p></div>
     <div class="card"><span class="ic">🎫</span><h3>Settings → Support tickets</h3><p>Something broken or missing? Raise it without leaving the app — text, image attachments, or a one-click <b>screen capture</b>. Tickets are recorded locally first (offline-safe, on the tamper-evident log), then filed straight onto the VKE issue tracker with the screenshots embedded — so the team is notified the moment you hit Send.</p></div>
   </div>
+  <div style="margin-top:26px">
+    <div class="eyebrow">One build · three natures · an additive discipline</div>
+    <div class="grid3" style="margin-top:14px">
+      <div class="card"><span class="ic">🍎</span><h3>Native</h3><p>Apple-silicon metal: MLX model serving and real MLX LoRA training — the fastest studio experience. <em>A one-line macOS install (no Docker at all) is on the roadmap.</em></p></div>
+      <div class="card"><span class="ic">📦</span><h3>Appliance</h3><p><span class="mono">docker compose up</span> on a Mac or a DGX — models, trainer and datasets bundled, fully offline after the pull.</p></div>
+      <div class="card"><span class="ic">⎈</span><h3>In-cluster</h3><p>One <span class="mono">helm install</span> into any Kubernetes — observing through its own ServiceAccount, read-only by RBAC.</p></div>
+    </div>
+    <div class="callout" style="margin-top:16px"><b>The release discipline that makes one build serve all three:</b> every change is <em>additive</em> — gated behind a flag with a safe default, degrading gracefully when a dependency is absent; nothing is ever renamed or removed. Releases are <b>changelog-driven</b> (the changelog's bullets become the update-channel highlights you see in Settings → Updates) and pass an automated <b>additive gate</b>: compile and lint across every module, then a bare-container smoke — the build must boot healthy with <em>no cluster, no AI and no trainer attached</em>, or nothing ships. One release command then keeps the source repo, the public artifact repo, the update channel and every install's Updates tab in lockstep.</div>
+  </div>
 </div></section>
 
 <section id="safety" class="tint"><div class="wide">
