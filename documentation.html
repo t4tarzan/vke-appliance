@@ -52,7 +52,7 @@
 <div class="wrap">
   <nav class="toc">
     <div class="h">User manual</div>
-    <a href="#manual">Overview</a><a href="#features">Features</a><a href="#studio">Training Studio</a><a href="#roles">Roles &amp; login</a><a href="#logins">Demo logins</a><a href="#lanes">The six lanes</a><a href="#loop-walk">A day in the loop</a>
+    <a href="#manual">Overview</a><a href="#setup">Setup</a><a href="#features">Features</a><a href="#studio">Training Studio</a><a href="#roles">Roles &amp; login</a><a href="#logins">Demo logins</a><a href="#lanes">The six lanes</a><a href="#loop-walk">A day in the loop</a>
     <div class="h">Technical</div>
     <a href="#tech">Architecture</a><a href="#fence">The safety fence</a><a href="#schemas">Data model</a><a href="#deploy">Deployment</a><a href="#demos">Two demo lanes</a>
     <div class="h">Reference</div>
@@ -68,6 +68,57 @@
         <b>Observe</b> (live cluster state + chat + prediction), <b>Act</b> (fenced remediation with
         human-in-the-loop approval), and <b>Learn</b> (its own incident history trains a local model that makes
         the engineer better every day). Every surface is a view over one append-only, tamper-evident event log.</p>
+    </section>
+
+    <section id="setup">
+      <h2>Setup — the four ways to run VKE</h2>
+      <p>Same product, same Training Studio, same update channel — pick the shape that fits the machine
+        in front of you. Every install is equally easy to remove.</p>
+
+      <h3>1 · Native macOS — Apple silicon, MLX, no Docker</h3>
+      <p>The fastest experience: Metal-speed model serving and real MLX LoRA finetunes in ~15 seconds.
+        Installs into <span class="pin">~/.vke</span> with a single launch agent — no sudo, no Docker.</p>
+      <pre>curl -fsSL https://raw.githubusercontent.com/t4tarzan/vke-appliance/main/install-macos.sh | bash</pre>
+      <p>First boot downloads ~1.2GB of models, then the browser opens on <span class="pin">http://localhost:9040</span>.
+        Manage it with <span class="pin">vke status</span> · <span class="pin">vke logs</span> ·
+        <span class="pin">vke stop</span>; remove it completely with <span class="pin">vke uninstall</span>.
+        Custom ports: prefix the installer with <span class="pin">VKE_PORT=8080</span>. Updates apply in one
+        click from Settings → Updates (the app swaps its own bundle and restarts).</p>
+
+      <h3>2 · Appliance — docker compose, everything bundled</h3>
+      <p>Three images carry the app, the AI models and a real CPU trainer — fully offline after the pull,
+        which makes this the shape for air-gapped sites and any machine with Docker (Mac, DGX, Linux).</p>
+      <pre>curl -O https://raw.githubusercontent.com/t4tarzan/vke-appliance/main/docker-compose.yml
+docker compose up -d
+open http://localhost:9040</pre>
+      <p>Attach your real environment by uncommenting one line in the compose file —
+        <span class="pin">~/.kube:/root/.kube:ro</span> to observe your cluster, or the docker socket to
+        list the host's containers (then Settings → Clusters → Discover). The bundled watchtower makes
+        Settings → Updates a true in-place update. <span class="pin">docker compose down -v</span> is a
+        factory reset; without <span class="pin">-v</span> your data and trained models survive restarts.</p>
+
+      <h3>3 · In-cluster — one helm install into any Kubernetes</h3>
+      <p>The product deploy: VKE runs <em>inside</em> your cluster and observes it through its own
+        ServiceAccount — read-only by RBAC until you grant more.</p>
+      <pre>helm install vke ./deploy/helm/vke --namespace vke --create-namespace \
+  --set ai.baseUrl=http://&lt;your-ollama-or-gateway&gt;:11434 \
+  --set ai.model=qwen2.5:7b</pre>
+      <p>Useful values: <span class="pin">clusterMode=demo</span> (the bundled snapshot instead of live
+        observe) · <span class="pin">rbac.writeNamespaces={staging}</span> (grant the fenced Act verbs in
+        listed namespaces only — everywhere else the API server itself refuses) ·
+        <span class="pin">trainer.enabled=true</span> (the trainer sidecar: the Training Studio trains
+        in-cluster and imports the result into your Ollama) · <span class="pin">service.nodePort</span>
+        (default 30940). Reach it via the NodePort or
+        <span class="pin">kubectl -n vke port-forward svc/vke 9040:9040</span>. Updates are a
+        <span class="pin">helm upgrade</span> (a pod can't replace its own image); removal is
+        <span class="pin">helm uninstall vke -n vke</span>.</p>
+
+      <h3>4 · Native (source) — the development shape</h3>
+      <p>The reference install every release is cut from: the source checkout run by a process manager,
+        with the full local model gateway and the MLX training factory. This is how VKE is developed —
+        clients use the three shapes above. Sign-in for every shape:
+        <span class="pin">U-ML / 3333</span> (ML engineer) · <span class="pin">U-LEAD / 1111</span> (SRE lead) ·
+        <span class="pin">U-OPS / 2222</span> (operator) · <span class="pin">U-DEMO / 0000</span> (read-only).</p>
     </section>
 
     <section id="features">
