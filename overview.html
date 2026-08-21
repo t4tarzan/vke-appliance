@@ -102,7 +102,7 @@
         <td><b>Real CPU LoRA</b> (HF peft, minutes) → GGUF → auto-imported into the bundled Ollama. <b>Four trainable bases baked into the trainer image</b> (Qwen&nbsp;0.5B · Llama&nbsp;3.2&nbsp;1B · Gemma&nbsp;3&nbsp;1B · SmolLM2&nbsp;1.7B) — the dropdown works fully air-gapped.</td>
         <td>Demo snapshot; mount <span class="mono">~/.kube</span> or the docker socket to attach the real environment.</td>
         <td>Any machine with Docker — Mac or DGX or Linux — especially <b>air-gapped</b> sites: everything is inside the images, nothing leaves.</td>
-        <td>CPU training (slower than MLX/GPU). arm64 images today. Watchtower handles its own updates.</td>
+        <td>CPU training (slower than MLX/GPU). Multi-arch images (amd64 + arm64) — Intel and ARM hosts alike. Watchtower handles its own updates.</td>
       </tr>
       <tr>
         <td><b>⎈ In-cluster</b><br><span class="pill">the product deploy</span></td>
