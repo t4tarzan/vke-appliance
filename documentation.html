@@ -197,7 +197,8 @@ open http://localhost:9040</pre>
           a recommended badge and its cloud-GPU floor. Fused finetunes appear too, so you can <b>continue training on top of them</b>.</li>
         <li><b>② Data</b> — the live SRE-history corpus, any saved dataset, or your own upload: JSONL in the common SFT shapes
           (<span class="mono">messages</span> · prompt/completion · instruction/output · Q&amp;A) or a two-column CSV. Rows are normalized to chat
-          format and PII-redacted; <b>append</b> grows an existing dataset for the next run.</li>
+          format and PII-redacted; <b>append</b> grows an existing dataset for the next run.
+          See <a href="dataset-formats.html" target="_blank">Data formats</a> — one incident shown in every accepted shape.</li>
         <li><b>③ Train</b> — alias, iterations, learning rate, batch size and LoRA layers with sensible defaults, plus a compute choice.
           <b>Nothing launches on the first click:</b> "Estimate &amp; train" returns the cost and wall-clock — local MLX is
           <span class="mono">$0.00</span>, a RunPod GPU shows its $/hr rate and total — and only the explicit

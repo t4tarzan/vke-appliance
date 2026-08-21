@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VKE · Telemetry-to-Training Data — the six pair shapes</title>
+<style>
+  :root{
+    --k8s:#326CE5; --teal:#2E8B84; --ink:#211D28; --body:#3C3744; --muted:#6E6878;
+    --canvas:#FBFAF7; --card:#FFFFFF; --line:#EAE5DB; --amber:#B07D2B; --coral:#C6552F;
+    --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+    --serif:"Iowan Old Style",Palatino,Georgia,serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--canvas);color:var(--body);font:15px/1.6 -apple-system,"Segoe UI",Inter,sans-serif;padding:40px 18px 80px}
+  .wrap{max-width:1060px;margin:0 auto}
+  .kicker{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--k8s);font-weight:700}
+  h1{font-family:var(--serif);font-weight:600;font-size:1.9rem;color:var(--ink);margin:.35rem 0 .6rem}
+  h2{font-family:var(--serif);font-weight:600;font-size:1.25rem;color:var(--ink);margin:2.6rem 0 .35rem}
+  .lede{color:var(--muted);max-width:76ch}
+  .note{background:#F4F1E9;border:1px solid var(--line);border-left:3px solid var(--teal);
+        border-radius:8px;padding:12px 16px;margin:1.1rem 0;font-size:.9rem}
+  .note b{color:var(--ink)}
+  .tag{display:inline-block;font:600 .68rem/1 var(--mono);letter-spacing:.06em;padding:4px 9px;
+       border-radius:20px;margin-left:8px;vertical-align:2px}
+  .tag.canon{background:#E8EFFC;color:var(--k8s)} .tag.alias{background:#EAF3F2;color:var(--teal)}
+  .tag.csv{background:#F6EFDF;color:var(--amber)}
+  .sub{color:var(--muted);font-size:.88rem;max-width:80ch;margin-bottom:.7rem}
+  .scroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card);
+          box-shadow:0 1px 3px rgba(33,29,40,.05)}
+  table{border-collapse:collapse;width:100%;min-width:760px;font-size:.85rem}
+  th{font:600 .68rem/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+     text-align:left;padding:10px 14px;border-bottom:2px solid var(--line);background:#FDFCF9;white-space:nowrap}
+  td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.src{width:24%;min-width:180px}
+  .stype{font:600 .7rem/1.5 var(--mono);color:var(--teal);text-transform:uppercase;letter-spacing:.05em}
+  .sdesc{color:var(--muted);font-size:.8rem}
+  code,pre{font-family:var(--mono);font-size:.78rem}
+  pre{background:#211D28;color:#E8E4DC;border-radius:8px;padding:12px 14px;overflow-x:auto;line-height:1.55;margin:0}
+  pre .k{color:#8AB4F8} pre .s{color:#A8D08D} pre .r{color:#E7A6A1} pre .c{color:#8F899A}
+  td pre{background:#F6F4EE;color:var(--ink);border:1px solid var(--line)}
+  td pre .k{color:#1F5FCC} td pre .s{color:#2E6B43} td pre .r{color:#A5432A}
+  .pill{display:inline-block;font:600 .66rem/1 var(--mono);padding:3px 8px;border-radius:12px;margin-right:5px}
+  .pill.u{background:#E8EFFC;color:var(--k8s)} .pill.a{background:#EAF3F2;color:var(--teal)}
+  .pill.sy{background:#F0EDE6;color:var(--muted)}
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:1rem 0 1.4rem;font-size:.82rem}
+  .fbox{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 13px;font-weight:600;color:var(--ink)}
+  .fbox small{display:block;font-weight:400;color:var(--muted);font-size:.72rem}
+  .arr{color:var(--muted)}
+  .foot{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--line);color:var(--muted);font-size:.78rem}
+  @media (prefers-color-scheme:dark){
+    :root{--canvas:#1B1820;--card:#241F2B;--line:#37313F;--ink:#F0EDE6;--body:#CFC9D6;--muted:#8F899A}
+    .note{background:#241F2B} th{background:#282230}
+    td pre{background:#171419;color:#E8E4DC;border-color:#37313F}
+    td pre .k{color:#8AB4F8} td pre .s{color:#A8D08D} td pre .r{color:#E7A6A1}
+    .tag.canon{background:#22304C} .tag.alias{background:#1F3634} .tag.csv{background:#3A3222}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="kicker">VKE · Training Studio · reference</div>
+<h1>Telemetry logs → training pairs: the six upload shapes</h1>
+<p class="lede">The Studio's <b>Add data</b> step accepts the same incident, one row per line, in any of
+the shapes below — JSONL pair-styles or a plain 2-column CSV. Every row is normalized to <b>one canonical
+chat-messages format</b> and PII-redacted before it is stored, so the trainer (MLX on a Mac, peft on the
+appliance, the sidecar in-cluster) always sees identical input regardless of how you exported your telemetry.</p>
+
+<div class="flow">
+  <span class="fbox">Your telemetry export<small>kubectl · Loki · PagerDuty · runbooks · CSV</small></span>
+  <span class="arr">→</span>
+  <span class="fbox">Upload / paste<small>shape auto-detected per row</small></span>
+  <span class="arr">→</span>
+  <span class="fbox">Normalize<small>→ chat-messages JSONL</small></span>
+  <span class="arr">→</span>
+  <span class="fbox">PII redact<small>emails · hosts · tokens</small></span>
+  <span class="arr">→</span>
+  <span class="fbox">Train<small>family template applied at serve</small></span>
+</div>
+
+<div class="note"><b>The running example</b> — one real incident class from the bundled
+<code>sre-pods-100</code> dataset (the same corpus the ft.dkube.app demo trained on): the
+<code>payments-api</code> CrashLoopBackOff, with its <code>kubectl</code> evidence as the input half and
+the verified fix as the output half. Each table below shows the SAME incident, just wearing a different
+pair shape.</div>
+
+<h2>1 · <code>messages</code> — the canonical chat shape <span class="tag canon">canonical · passed through as-is</span></h2>
+<p class="sub">What every other shape is converted INTO, and what the bundled datasets
+(<code>sre-pods-100</code>, <code>sre-pods-append-50</code>, <code>k8s-troubleshooting</code>) already use.
+Carries an explicit system turn — for Gemma bases the system turn is folded into the first user turn
+automatically (Gemma templates take no system role).</p>
+<div class="scroll"><table>
+<tr><th>Telemetry source</th><th>Uploaded row (one JSONL line, pretty-printed)</th></tr>
+<tr>
+<td class="src"><span class="stype">Incident + kubectl evidence</span><br>
+<span class="sdesc">event-log signature <code>pod:CrashLoopBackOff:payments-api</code> + the fix a human approved</span></td>
+<td><pre>{ <span class="k">"messages"</span>: [
+  { <span class="k">"role"</span>: <span class="s">"system"</span>,    <span class="k">"content"</span>: <span class="s">"You are k8s-sre, a virtual Kubernetes engineer specialized on this cluster."</span> },
+  { <span class="k">"role"</span>: <span class="s">"user"</span>,      <span class="k">"content"</span>: <span class="s">"Pods for payments-api in namespace payments keep restarting with CrashLoopBackOff.
+$ kubectl -n payments get pod
+NAME              READY  STATUS             RESTARTS
+payments-api-0    0/1    CrashLoopBackOff   17
+$ kubectl -n payments logs payments-api-0 --previous | tail -1
+FATAL: could not connect to db: dial tcp 10.43.0.12:5432: i/o timeout"</span> },
+  { <span class="k">"role"</span>: <span class="s">"assistant"</span>, <span class="k">"content"</span>: <span class="s">"Root cause: the DB NetworkPolicy dropped the payments namespace after the mesh upgrade.
+Fix that worked: restore the allow-rule, then kubectl -n payments rollout restart deploy/payments-api."</span> }
+]}</pre></td>
+</tr>
+</table></div>
+
+<h2>2 · <code>prompt</code> / <code>completion</code> <span class="tag alias">classic OpenAI-SFT style</span></h2>
+<p class="sub">The oldest fine-tuning export shape — most log-labeling pipelines and the ft.dkube.app
+generator can emit it directly. The prompt half carries the raw telemetry; the completion is the
+resolution note.</p>
+<div class="scroll"><table>
+<tr><th>Telemetry source</th><th>Uploaded row</th><th>Becomes (after normalize)</th></tr>
+<tr>
+<td class="src"><span class="stype">Alert + log tail</span><br>
+<span class="sdesc">Alertmanager firing + the last container log line</span></td>
+<td><pre>{ <span class="k">"prompt"</span>: <span class="s">"[FIRING] KubePodCrashLooping
+payments/payments-api-0 (17 restarts)
+last log: FATAL: could not connect to db:
+dial tcp 10.43.0.12:5432: i/o timeout"</span>,
+  <span class="k">"completion"</span>: <span class="s">"NetworkPolicy regression from the
+mesh upgrade — restore the db allow-rule and
+rollout-restart payments-api."</span> }</pre></td>
+<td><span class="pill sy">system</span>default SRE persona<br>
+<span class="pill u">user</span>= prompt<br>
+<span class="pill a">assistant</span>= completion</td>
+</tr>
+</table></div>
+
+<h2>3 · <code>instruction</code> / <code>output</code> <span class="tag alias">Alpaca / runbook style</span></h2>
+<p class="sub">Natural when the source is a <b>runbook or playbook</b> rather than raw logs — the
+instruction reads like a task, the output like the procedure. Good for teaching the model your
+house remediation style.</p>
+<div class="scroll"><table>
+<tr><th>Telemetry source</th><th>Uploaded row</th><th>Becomes</th></tr>
+<tr>
+<td class="src"><span class="stype">Runbook step</span><br>
+<span class="sdesc">the CrashLoop playbook card, exported row-per-step</span></td>
+<td><pre>{ <span class="k">"instruction"</span>: <span class="s">"Diagnose a CrashLoopBackOff
+on deployment payments-api and state the
+fenced remediation."</span>,
+  <span class="k">"output"</span>: <span class="s">"1) kubectl logs --previous for the
+crash reason  2) if config/dependency, fix the
+dependency  3) kubectl rollout restart
+deploy/payments-api — never delete pods."</span> }</pre></td>
+<td><span class="pill sy">system</span>default persona<br>
+<span class="pill u">user</span>= instruction<br>
+<span class="pill a">assistant</span>= output</td>
+</tr>
+</table></div>
+
+<h2>4 · <code>input</code> / <code>output</code> <span class="tag alias">pipeline / transform style</span></h2>
+<p class="sub">The shape most <b>log-summarization exports</b> land in: raw machine telemetry in, a
+human-grade reading out. Ideal for teaching “read this wall of events and say what matters.”</p>
+<div class="scroll"><table>
+<tr><th>Telemetry source</th><th>Uploaded row</th><th>Becomes</th></tr>
+<tr>
+<td class="src"><span class="stype">Raw event stream</span><br>
+<span class="sdesc"><code>kubectl get events</code> window around the incident</span></td>
+<td><pre>{ <span class="k">"input"</span>: <span class="s">"14:02 Warning BackOff pod/payments-api-0
+14:02 Warning Unhealthy readiness probe failed
+14:03 Normal  Pulled  image already present
+14:03 Warning BackOff restarting failed container"</span>,
+  <span class="k">"output"</span>: <span class="s">"payments-api-0 is crash-looping —
+the container starts, fails its dependency,
+and backs off. Not an image or scheduling
+problem; check the downstream DB first."</span> }</pre></td>
+<td><span class="pill sy">system</span>default persona<br>
+<span class="pill u">user</span>= input<br>
+<span class="pill a">assistant</span>= output</td>
+</tr>
+</table></div>
+
+<h2>5 · <code>question</code> / <code>answer</code> (or <code>q</code> / <code>a</code>) <span class="tag alias">knowledge-base style</span></h2>
+<p class="sub">The FAQ shape — what you get from mining <b>postmortems, ticket threads and wiki pages</b>
+into Q&amp;A. The bundled <code>k8s-troubleshooting</code> set is essentially this, pre-converted.</p>
+<div class="scroll"><table>
+<tr><th>Telemetry source</th><th>Uploaded row</th><th>Becomes</th></tr>
+<tr>
+<td class="src"><span class="stype">Postmortem Q&amp;A</span><br>
+<span class="sdesc">mined from the INC-4200 review doc</span></td>
+<td><pre>{ <span class="k">"q"</span>: <span class="s">"Why did payments-api crash-loop after
+the service-mesh upgrade?"</span>,
+  <span class="k">"a"</span>: <span class="s">"The upgrade re-applied a default-deny
+NetworkPolicy that dropped the payments→db
+path. The pods started, timed out on 5432,
+and exited — classic dependency CrashLoop."</span> }</pre></td>
+<td><span class="pill sy">system</span>default persona<br>
+<span class="pill u">user</span>= q<br>
+<span class="pill a">assistant</span>= a</td>
+</tr>
+</table></div>
+
+<h2>6 · <code>user</code> / <code>assistant</code> <span class="tag alias">chat-transcript style</span></h2>
+<p class="sub">Flattened chat exports — a Slack #incidents thread or the VKE chat lane itself, one
+exchange per row. Closest in spirit to shape 1 but without the explicit system turn.</p>
+<div class="scroll"><table>
+<tr><th>Telemetry source</th><th>Uploaded row</th><th>Becomes</th></tr>
+<tr>
+<td class="src"><span class="stype">#incidents thread</span><br>
+<span class="sdesc">on-call question + the SRE's reply, one turn-pair per row</span></td>
+<td><pre>{ <span class="k">"user"</span>: <span class="s">"payments-api is bouncing again,
+17 restarts — same as last week?"</span>,
+  <span class="k">"assistant"</span>: <span class="s">"Yes, same signature. It's the
+db NetworkPolicy — I've restored the allow-rule;
+give it a rollout-restart and watch readiness."</span> }</pre></td>
+<td><span class="pill sy">system</span>default persona<br>
+<span class="pill u">user</span>= user<br>
+<span class="pill a">assistant</span>= assistant</td>
+</tr>
+</table></div>
+
+<h2>7 · Plain CSV / TSV <span class="tag csv">no JSON required</span></h2>
+<p class="sub">For spreadsheet people: first column = the question/telemetry, second column = the answer.
+A header row (<code>prompt</code>, <code>question</code>, <code>input</code>, <code>instruction</code>,
+<code>user</code>, <code>q</code>) is auto-detected and skipped; tabs auto-detected from the first line.</p>
+<div class="scroll"><table>
+<tr><th>Telemetry source</th><th>Uploaded file</th><th>Becomes</th></tr>
+<tr>
+<td class="src"><span class="stype">Triage spreadsheet</span><br>
+<span class="sdesc">the ops team's incident log kept in Sheets</span></td>
+<td><pre><span class="c">question,answer</span>
+<span class="s">"payments-api CrashLoopBackOff, db timeout","NetworkPolicy blocked 5432 — restore allow-rule, rollout restart"</span>
+<span class="s">"node drain left pods Pending","PodDisruptionBudget too strict — raise maxUnavailable to 1"</span>
+<span class="s">"OOMKilled under load","requests too low — set memory request 512Mi, limit 1Gi"</span></pre></td>
+<td>each data row →<br>
+<span class="pill sy">system</span>default persona<br>
+<span class="pill u">user</span>= col 1<br>
+<span class="pill a">assistant</span>= col 2</td>
+</tr>
+</table></div>
+
+<h2>What happens to every row, whichever shape it arrived in</h2>
+<div class="scroll"><table>
+<tr><th>Step</th><th>What it does</th><th>Why it matters</th></tr>
+<tr><td><b>Normalize</b></td><td>Every shape above → the canonical <code>{"messages":[…]}</code> row; a default SRE system turn is added where the shape has none.</td><td>The three trainers (MLX · peft-CPU · in-cluster sidecar) share one input contract — no per-format code anywhere downstream.</td></tr>
+<tr><td><b>PII redact</b></td><td>Emails, IPs, API keys and JWTs are scrubbed from every turn <i>before</i> the file is written. Cluster hostnames and service names are deliberately kept — in SRE telemetry they <i>are</i> the training signal.</td><td>Nothing sensitive can leak into an export or a cloud <code>cmd/</code> call later — redaction happens at the door, not at egress.</td></tr>
+<tr><td><b>Skip &amp; count</b></td><td>Unparseable lines are skipped, never fatal; the response reports <code>added / rows / skipped</code>.</td><td>A half-messy log export still yields a usable dataset instead of an error wall.</td></tr>
+<tr><td><b>Append</b></td><td><code>append=true</code> grows an existing set (the <code>sre-pods-append-50</code> story).</td><td>Powers “Retrain +data”: v2 trains from the fused v1 on the grown set, and the loss overlay shows the head start.</td></tr>
+<tr><td><b>Family template</b></td><td>At serve time the trained model is imported with its base family's chat template (ChatML · Llama&nbsp;3 · Gemma · Mistral); Gemma bases get the system turn folded.</td><td>The answers come back through the same conversational grammar the base was pre-trained on — no degraded output from a mismatched template.</td></tr>
+</table></div>
+
+<div class="foot">VKE Training Studio · dataset ingestion reference · examples drawn from the bundled
+sre-pods corpus (synthetic — no production telemetry). One incident, six wardrobes, one canonical format.</div>
+
+</div>
+</body>
+</html>
