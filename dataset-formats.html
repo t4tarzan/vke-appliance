@@ -278,6 +278,33 @@ check logs then rollout restart</pre></td>
 <tr><td><b>Family template</b></td><td>At serve time the trained model is imported with its base family's chat template (ChatML · Llama&nbsp;3 · Gemma · Mistral); Gemma bases get the system turn folded.</td><td>The answers come back through the same conversational grammar the base was pre-trained on — no degraded output from a mismatched template.</td></tr>
 </table></div>
 
+<h2>Case studies — try the upload yourself</h2>
+<p class="sub">Six synthetic datasets generated from a real SRE-platform schema (43 tables: k8s telemetry,
+ensemble leak predictions, SOP registry, expert feedback, pattern signatures, agent DAGs) — each table
+group exported in a <i>different</i> format, so every download below exercises one parser. They also come
+pre-seeded in the Studio's dataset picker, ready to train on.</p>
+<div class="scroll"><table>
+<tr><th>Case study (suited tables)</th><th>Format</th><th>Download</th><th>Story it trains</th></tr>
+<tr><td>k8s incidents — <code>kubernetes_events · kubernetes_pod_status · alert_log</code></td><td>JSONL</td>
+<td><a href="case-studies/k8s-incidents-60.jsonl">60 rows</a> + <a href="case-studies/k8s-incidents-append-30.jsonl">append-30</a></td>
+<td>evidence → diagnosis → fenced fix (the append set powers the v1→v2 loss-curve overlay)</td></tr>
+<tr><td>leak predictions — <code>predictions · ml_use_cases · prediction_cache</code></td><td>CSV</td>
+<td><a href="case-studies/leak-predictions-40.csv">40 rows</a></td>
+<td>read an ensemble (LSTM · RF · isolation forest) and decide act / watch / ignore</td></tr>
+<tr><td>SOP knowledge — <code>sop_registry · sop_gaps · sop_effectiveness</code></td><td>Markdown</td>
+<td><a href="case-studies/sop-knowledge-30.md">30 rows</a></td>
+<td>operator questions answered from the runbook registry (incl. closed sop_gaps)</td></tr>
+<tr><td>expert feedback — <code>expert_feedback · model_performance · model_promotion_log</code></td><td>YAML</td>
+<td><a href="case-studies/expert-feedback-30.yml">30 rows</a></td>
+<td>turn ratings + outcomes into retrain / promote / demote decisions</td></tr>
+<tr><td>pattern signatures — <code>pattern_signatures · pod_baselines · comprehensive_metrics</code></td><td>XML</td>
+<td><a href="case-studies/pattern-signatures-30.xml">30 rows</a></td>
+<td>read a matched telemetry pattern (sawtooth, stair-step, throttle plateau…) correctly</td></tr>
+<tr><td>agent ops — <code>agents · agent_status · dag_execution_history · dedup_log</code></td><td>XLSX</td>
+<td><a href="case-studies/agent-ops-24.xlsx">24 rows</a></td>
+<td>keep the observability plane itself healthy (stale agents, failed DAGs, backlogs)</td></tr>
+</table></div>
+
 <div class="foot">VKE Training Studio · dataset ingestion reference · examples drawn from the bundled
 sre-pods corpus (synthetic — no production telemetry). One incident, six wardrobes, one canonical format.</div>
 
