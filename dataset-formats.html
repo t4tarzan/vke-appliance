@@ -64,7 +64,7 @@
 <div class="kicker">VKE · Training Studio · reference</div>
 <h1>Telemetry logs → training pairs: the six upload shapes</h1>
 <p class="lede">The Studio's <b>Add data</b> step accepts the same incident, one row per line, in any of
-the shapes below — JSONL pair-styles or a plain 2-column CSV. Every row is normalized to <b>one canonical
+the shapes below — JSONL pair-styles, a 2-column CSV/TSV or XLSX, pair-tag XML, a YAML list, or Q/A markdown. Every row is normalized to <b>one canonical
 chat-messages format</b> and PII-redacted before it is stored, so the trainer (MLX on a Mac, peft on the
 appliance, the sidecar in-cluster) always sees identical input regardless of how you exported your telemetry.</p>
 
@@ -75,7 +75,7 @@ appliance, the sidecar in-cluster) always sees identical input regardless of how
   <span class="arr">→</span>
   <span class="fbox">Normalize<small>→ chat-messages JSONL</small></span>
   <span class="arr">→</span>
-  <span class="fbox">PII redact<small>emails · hosts · tokens</small></span>
+  <span class="fbox">PII anonymize<small>reversible vault · emails · IPs · keys</small></span>
   <span class="arr">→</span>
   <span class="fbox">Train<small>family template applied at serve</small></span>
 </div>
@@ -235,11 +235,44 @@ A header row (<code>prompt</code>, <code>question</code>, <code>input</code>, <c
 </tr>
 </table></div>
 
+<h2>8 · XLSX · XML · YAML · Markdown <span class="tag csv">same incident, more containers</span></h2>
+<p class="sub">The remaining file types the upload accepts — each is parsed to the same user/assistant
+pairs and then follows the identical pipeline. XLSX is read straight from the file (no Excel export
+step); XML matches any of the pair tags per repeated element; YAML takes a list of pair items;
+Markdown takes <code>Q:</code>/<code>A:</code> pairs or <code>##&nbsp;heading</code> → body sections.</p>
+<div class="scroll"><table>
+<tr><th>Type</th><th>Example</th><th>Parsed as</th></tr>
+<tr><td class="src"><span class="stype">.xlsx</span><br><span class="sdesc">first sheet, first two columns; header auto-skipped</span></td>
+<td><pre>| question                        | answer                     |
+| etcd disk latency on 10.0.4.2   | move etcd to local SSD     |
+| kubelet flapping                | rotate certs, restart      |</pre></td>
+<td>col&nbsp;1 → <span class="pill u">user</span><br>col&nbsp;2 → <span class="pill a">assistant</span></td></tr>
+<tr><td class="src"><span class="stype">.xml</span><br><span class="sdesc">repeated elements with any pair tags</span></td>
+<td><pre>&lt;rows&gt;
+  &lt;row&gt;&lt;question&gt;api 500s spiking&lt;/question&gt;
+       &lt;answer&gt;rollback the canary&lt;/answer&gt;&lt;/row&gt;
+&lt;/rows&gt;</pre></td>
+<td>pair tags → <span class="pill u">user</span> / <span class="pill a">assistant</span></td></tr>
+<tr><td class="src"><span class="stype">.yml / .yaml</span><br><span class="sdesc">a list of pair items (any shape from §2–§6)</span></td>
+<td><pre>- q: why pending pods?
+  a: taints block scheduling
+- instruction: check quota
+  output: kubectl describe quota</pre></td>
+<td>each item → the same<br>shape detection as JSONL</td></tr>
+<tr><td class="src"><span class="stype">.md</span><br><span class="sdesc">Q:/A: pairs, or ## heading → body</span></td>
+<td><pre>Q: pods evicted at night?
+A: node memory pressure — set requests
+
+## CrashLoopBackOff on web
+check logs then rollout restart</pre></td>
+<td>Q/A or heading/body →<br><span class="pill u">user</span> / <span class="pill a">assistant</span></td></tr>
+</table></div>
+
 <h2>What happens to every row, whichever shape it arrived in</h2>
 <div class="scroll"><table>
 <tr><th>Step</th><th>What it does</th><th>Why it matters</th></tr>
 <tr><td><b>Normalize</b></td><td>Every shape above → the canonical <code>{"messages":[…]}</code> row; a default SRE system turn is added where the shape has none.</td><td>The three trainers (MLX · peft-CPU · in-cluster sidecar) share one input contract — no per-format code anywhere downstream.</td></tr>
-<tr><td><b>PII redact</b></td><td>Emails, IPs, API keys and JWTs are scrubbed from every turn <i>before</i> the file is written. Cluster hostnames and service names are deliberately kept — in SRE telemetry they <i>are</i> the training signal.</td><td>Nothing sensitive can leak into an export or a cloud <code>cmd/</code> call later — redaction happens at the door, not at egress.</td></tr>
+<tr><td><b>PII anonymize<br>(reversible)</b></td><td>Emails, IPs, API keys and JWTs become consistent numbered tokens (<code>[IP_1]</code>, <code>[EMAIL_2]</code>…) via a local vault — same value → same token across uploads and restarts. Cluster hostnames and service names are deliberately kept — in SRE telemetry they <i>are</i> the training signal.</td><td>Datasets and cloud <code>cmd/</code> calls never carry the real values — and because the vault is reversible, the <b>fix-proposal outgate deanonymizes</b>: when a trained model's answer or a proposed fix carries a token, the real value is restored locally so the applied fix is the correct, concrete one. The vault never leaves the box (0600, beside the datasets).</td></tr>
 <tr><td><b>Skip &amp; count</b></td><td>Unparseable lines are skipped, never fatal; the response reports <code>added / rows / skipped</code>.</td><td>A half-messy log export still yields a usable dataset instead of an error wall.</td></tr>
 <tr><td><b>Append</b></td><td><code>append=true</code> grows an existing set (the <code>sre-pods-append-50</code> story).</td><td>Powers “Retrain +data”: v2 trains from the fused v1 on the grown set, and the loss overlay shows the head start.</td></tr>
 <tr><td><b>Family template</b></td><td>At serve time the trained model is imported with its base family's chat template (ChatML · Llama&nbsp;3 · Gemma · Mistral); Gemma bases get the system turn folded.</td><td>The answers come back through the same conversational grammar the base was pre-trained on — no degraded output from a mismatched template.</td></tr>

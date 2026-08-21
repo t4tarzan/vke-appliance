@@ -196,8 +196,9 @@ open http://localhost:9040</pre>
         <li><b>① Model</b> — every trainable MLX model on the box, with size, a fit note ("fast prototyping — ~20s local" … "high quality — minutes"),
           a recommended badge and its cloud-GPU floor. Fused finetunes appear too, so you can <b>continue training on top of them</b>.</li>
         <li><b>② Data</b> — the live SRE-history corpus, any saved dataset, or your own upload: JSONL in the common SFT shapes
-          (<span class="mono">messages</span> · prompt/completion · instruction/output · Q&amp;A) or a two-column CSV. Rows are normalized to chat
-          format and PII-redacted; <b>append</b> grows an existing dataset for the next run.
+          (<span class="mono">messages</span> · prompt/completion · instruction/output · Q&amp;A), a two-column CSV/TSV or XLSX, pair-tag XML,
+          a YAML list, or Q/A markdown. Rows are normalized to chat format and PII-anonymized (a reversible local vault —
+          fix proposals are deanonymized so the applied fix carries the real values); <b>append</b> grows an existing dataset for the next run.
           See <a href="dataset-formats.html" target="_blank">Data formats</a> — one incident shown in every accepted shape.</li>
         <li><b>③ Train</b> — alias, iterations, learning rate, batch size and LoRA layers with sensible defaults, plus a compute choice.
           <b>Nothing launches on the first click:</b> "Estimate &amp; train" returns the cost and wall-clock — local MLX is
