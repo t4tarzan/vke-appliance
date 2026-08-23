@@ -24,6 +24,14 @@
   digests, and natural-language database queries that always show their SQL.
 - **The signed offline bundle**: images (models inside), charts, docs and a local update channel
   in one openssl-signed, self-verifying artifact; the SEALED ACCEPTANCE WALK is the release gate.
+- **Registry fix — `vke-trainer` re-pull required**: the pre-1.3.0 `vke-trainer:latest` manifest
+  on ghcr paired one layer with a wrong uncompressed digest (DiffID), so strict runtimes
+  (podman/CRI-O on x86 clusters) refused the pull with a "does not match config's DiffID" error.
+  The 1.3.0 push replaced the manifest with a corrected, strictly-validated pairing (both
+  amd64 and arm64 verified blob-by-blob). **If you hit that error: `docker pull` /
+  `podman pull ghcr.io/t4tarzan/vke-trainer:latest` again — no other change needed.**
+  (Multi-arch tags are now stitched with `buildx imagetools` so this class of mismatch is
+  caught at release time.)
 
 ## 1.2.0 · 2026-08-21
 - **A real base-model catalog**: Llama 3.2 1B, Gemma 3 1B, SmolLM2 1.7B and Mistral 7B join
