@@ -1,5 +1,37 @@
 # VKE — Changelog
 
+## 1.2.1 · 2026-08-23
+- **The appliance works on linux/amd64 again**: v1.2.0's `docker compose up -d` came up with
+  no models, no dataset list and a fictional cluster on any x86_64 host. Four independent build
+  defects, each fixed at its root and each now guarded so it cannot ship again.
+- **vke-ollama carries real models**: the bake ran as `pull A && pull B && pkill ollama || true`,
+  and a trailing `|| true` applies to the whole `&&` chain — an interrupted pull still exited 0.
+  The published image held 941MB of `*-partial-N` chunks and zero manifests; ollama prunes
+  partial blobs at startup, so chat and the k8s-sre alias had no model at all. The bake now
+  waits for readiness instead of `sleep 5`, runs under `set -e`, stops the server gracefully,
+  and asserts real manifests with no partial chunks before the layer may commit.
+- **Arch-correct kubectl**: `ARG TARGETARCH=arm64` meant `buildx --platform linux/amd64` still
+  expanded to arm64 — BuildKit does not override an ARG that carries a default (verified:
+  TARGETARCH=arm64 with uname=x86_64). The amd64 image therefore shipped an arm64 kubectl,
+  every cluster probe died with "exec format error", and the console showed the demo snapshot
+  as though it were the real cluster. The arch now comes from the image itself
+  (`dpkg --print-architecture`), the pin moved to v1.34.11, and the build runs
+  `kubectl version --client` so a mismatch fails the build instead of the appliance.
+- **No macOS resource forks in the image**: a `.dockerignore` keeps `._*` out of the build
+  context at any depth. AppleDouble siblings are git-ignored on a Mac, so release.sh's
+  clean-tree gate never saw them and `COPY data/ data/` baked non-UTF-8 `._<name>.jsonl`
+  files that made `list_datasets()` raise UnicodeDecodeError — GET /v1/datasets returned 500
+  and the Training Studio had nothing to train on. The listing and the seeder skip dotfiles.
+- **A working update engine**: watchtower moves to the maintained fork
+  (ghcr.io/nicholas-fedor/watchtower, pinned 1.21.0). containrrr has been unmaintained since
+  2023 and speaks Docker API 1.25, which every daemon >= 25 rejects, so it crashlooped and
+  Settings -> Updates could not work on any current Docker.
+- **An artifact gate in release.sh**: after building, each per-arch image is inspected — kubectl
+  must actually run, no resource forks may be present, and vke-ollama must carry complete
+  model manifests. The old gate only proved the app booted, which all four defects survived.
+- **Cluster probes report why they failed** instead of a bare "unreadable / no contexts"
+  followed by a silent slide into demo mode.
+
 ## 1.2.0 · 2026-08-21
 - **A real base-model catalog**: Llama 3.2 1B, Gemma 3 1B, SmolLM2 1.7B and Mistral 7B join
   Qwen as trainable bases in every shape. The small trio is BUNDLED — baked into the appliance

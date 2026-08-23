@@ -37,7 +37,10 @@ services:
   # the update engine behind Settings -> Updates: the Update button asks watchtower
   # to pull fresh images + recreate the labeled containers (a true in-place update).
   watchtower:
-    image: containrrr/watchtower
+    # containrrr/watchtower is unmaintained since 2023 and speaks Docker API 1.25, which
+    # every daemon >= 25 refuses ("client version 1.25 is too old") — it crashlooped, so
+    # Settings -> Updates could never work. This is the maintained fork, pinned.
+    image: ghcr.io/nicholas-fedor/watchtower:1.21.0
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock

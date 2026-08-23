@@ -1,9 +1,12 @@
 {
-  "version": "1.2.0",
-  "date": "2026-08-21",
+  "version": "1.2.1",
+  "date": "2026-08-23",
   "highlights": [
-    "A real base-model catalog",
-    "Family-correct serving",
-    "Setup"
+    "The appliance works on linux/amd64 again",
+    "vke-ollama carries real models",
+    "Arch-correct kubectl",
+    "No macOS resource forks in the image",
+    "A working update engine",
+    "An artifact gate in release.sh"
   ]
 }
