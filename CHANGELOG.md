@@ -1,5 +1,16 @@
 # VKE — Changelog
 
+## 1.2.2 · 2026-08-23
+- **nomic-embed-text is baked in too**: RAG (backend/factory/rag2.py) defaults VKE_EMBED_MODEL
+  to nomic-embed-text and expects it present offline, but 1.2.1's vke-ollama carried only the
+  two qwen models — embeddings would have failed on an air-gapped box. The bake now takes its
+  model list from one ARG (OLLAMA_MODELS_BAKE) and **asserts a manifest for every model in it**.
+  Counting manifests (">= 2") was the weaker check that let a missing third model through.
+- **Heads-up on vke-ollama:1.2.0**: that published tag is the zero-model build — its bake layer
+  is 0 bytes in the registry (layers 0.03/0.10/0.01/3.23/**0.00** GB vs 1.35 GB here). It is
+  left in place for immutability, so anything still pinning `vke-ollama:1.2.0` gets an ollama
+  with no models and dead chat. Pin 1.2.2 (or :latest) instead.
+
 ## 1.2.1 · 2026-08-23
 - **The appliance works on linux/amd64 again**: v1.2.0's `docker compose up -d` came up with
   no models, no dataset list and a fictional cluster on any x86_64 host. Four independent build
