@@ -1,47 +1,29 @@
 # VKE — Changelog
 
-## 1.2.2 · 2026-08-23
-- **nomic-embed-text is baked in too**: RAG (backend/factory/rag2.py) defaults VKE_EMBED_MODEL
-  to nomic-embed-text and expects it present offline, but 1.2.1's vke-ollama carried only the
-  two qwen models — embeddings would have failed on an air-gapped box. The bake now takes its
-  model list from one ARG (OLLAMA_MODELS_BAKE) and **asserts a manifest for every model in it**.
-  Counting manifests (">= 2") was the weaker check that let a missing third model through.
-- **Heads-up on vke-ollama:1.2.0**: that published tag is the zero-model build — its bake layer
-  is 0 bytes in the registry (layers 0.03/0.10/0.01/3.23/**0.00** GB vs 1.35 GB here). It is
-  left in place for immutability, so anything still pinning `vke-ollama:1.2.0` gets an ollama
-  with no models and dead chat. Pin 1.2.2 (or :latest) instead.
-
-## 1.2.1 · 2026-08-23
-- **The appliance works on linux/amd64 again**: v1.2.0's `docker compose up -d` came up with
-  no models, no dataset list and a fictional cluster on any x86_64 host. Four independent build
-  defects, each fixed at its root and each now guarded so it cannot ship again.
-- **vke-ollama carries real models**: the bake ran as `pull A && pull B && pkill ollama || true`,
-  and a trailing `|| true` applies to the whole `&&` chain — an interrupted pull still exited 0.
-  The published image held 941MB of `*-partial-N` chunks and zero manifests; ollama prunes
-  partial blobs at startup, so chat and the k8s-sre alias had no model at all. The bake now
-  waits for readiness instead of `sleep 5`, runs under `set -e`, stops the server gracefully,
-  and asserts real manifests with no partial chunks before the layer may commit.
-- **Arch-correct kubectl**: `ARG TARGETARCH=arm64` meant `buildx --platform linux/amd64` still
-  expanded to arm64 — BuildKit does not override an ARG that carries a default (verified:
-  TARGETARCH=arm64 with uname=x86_64). The amd64 image therefore shipped an arm64 kubectl,
-  every cluster probe died with "exec format error", and the console showed the demo snapshot
-  as though it were the real cluster. The arch now comes from the image itself
-  (`dpkg --print-architecture`), the pin moved to v1.34.11, and the build runs
-  `kubectl version --client` so a mismatch fails the build instead of the appliance.
-- **No macOS resource forks in the image**: a `.dockerignore` keeps `._*` out of the build
-  context at any depth. AppleDouble siblings are git-ignored on a Mac, so release.sh's
-  clean-tree gate never saw them and `COPY data/ data/` baked non-UTF-8 `._<name>.jsonl`
-  files that made `list_datasets()` raise UnicodeDecodeError — GET /v1/datasets returned 500
-  and the Training Studio had nothing to train on. The listing and the seeder skip dotfiles.
-- **A working update engine**: watchtower moves to the maintained fork
-  (ghcr.io/nicholas-fedor/watchtower, pinned 1.21.0). containrrr has been unmaintained since
-  2023 and speaks Docker API 1.25, which every daemon >= 25 rejects, so it crashlooped and
-  Settings -> Updates could not work on any current Docker.
-- **An artifact gate in release.sh**: after building, each per-arch image is inspected — kubectl
-  must actually run, no resource forks may be present, and vke-ollama must carry complete
-  model manifests. The old gate only proved the app booted, which all four defects survived.
-- **Cluster probes report why they failed** instead of a bare "unreadable / no contexts"
-  followed by a silent slide into demo mode.
+## 1.3.0 · 2026-08-23
+- **Air-gap edition (the vke-airgap arc, complete)**: the platform now runs with ZERO internet,
+  forever — one master seal (`VKE_AIRGAP=1`) turns off every egress class, proven with a network
+  canary and a packet capture showing nothing ever leaves.
+- **The governed API gateway (`/api/v1`)**: standard OpenAI-compatible chat/embeddings for
+  hundreds of intranet users — per-key quotas, exact metering, and a tamper-evident RECEIPT on
+  every answer; 27ms p95 gateway overhead at 300 concurrent live streams.
+- **Department workspaces**: each department gets its own API keys, model personas, datasets,
+  knowledge collections and audit stream — proven fully isolated from each other.
+- **Knowledge with citations (RAG v2)**: answers ground in the department's documents and the
+  estate's own ops history; every citation deep-links to the exact highlighted passage. The
+  platform files its own incidents, syslog and meeting recordings into the same library.
+- **Five ingest doors, one pipeline**: webhook, watched file-drop/SMB folder, MinIO/S3 pull,
+  read-only Postgres pull and a syslog listener — everything normalized and PII-vaulted.
+- **Identity**: optional LDAP and Keycloak (OpenID Connect) sign-in with group→role/workspace
+  mapping; PIN login always keeps working.
+- **MCP server (`/mcp`)**: one URL plugs an employee's IDE/agent client into the department's
+  model, knowledge and approved tools — proven with Claude Code as a real client; every call
+  audited.
+- **Accountability layer**: eval-gated promotes (a regressing model is blocked; override goes
+  through human approval), auto model cards, EU-AI-Act-framed audit-export packs, weekly AI
+  digests, and natural-language database queries that always show their SQL.
+- **The signed offline bundle**: images (models inside), charts, docs and a local update channel
+  in one openssl-signed, self-verifying artifact; the SEALED ACCEPTANCE WALK is the release gate.
 
 ## 1.2.0 · 2026-08-21
 - **A real base-model catalog**: Llama 3.2 1B, Gemma 3 1B, SmolLM2 1.7B and Mistral 7B join

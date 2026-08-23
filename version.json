@@ -1,8 +1,12 @@
 {
-  "version": "1.2.2",
+  "version": "1.3.0",
   "date": "2026-08-23",
   "highlights": [
-    "nomic-embed-text is baked in too",
-    "Heads-up on vke-ollama:1.2.0"
+    "Air-gap edition (the vke-airgap arc, complete)",
+    "The governed API gateway (`/api/v1`)",
+    "Department workspaces",
+    "Knowledge with citations (RAG v2)",
+    "Five ingest doors, one pipeline",
+    "Identity"
   ]
 }

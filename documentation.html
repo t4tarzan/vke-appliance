@@ -100,13 +100,9 @@ open http://localhost:9040</pre>
       <h3>3 · In-cluster — one helm install into any Kubernetes</h3>
       <p>The product deploy: VKE runs <em>inside</em> your cluster and observes it through its own
         ServiceAccount — read-only by RBAC until you grant more.</p>
-      <pre>helm install vke oci://ghcr.io/t4tarzan/charts/vke --version 0.1.0 \
-  --namespace vke --create-namespace \
+      <pre>helm install vke ./deploy/helm/vke --namespace vke --create-namespace \
   --set ai.baseUrl=http://&lt;your-ollama-or-gateway&gt;:11434 \
   --set ai.model=qwen2.5:7b</pre>
-      <p>The chart is an OCI artifact — <span class="pin">helm</span> 3.8+ pulls it straight from the
-        registry, no <span class="pin">helm repo add</span> and no clone. Working from a checkout instead?
-        <span class="pin">helm install vke ./deploy/helm/vke</span> still does the same thing.</p>
       <p>Useful values: <span class="pin">clusterMode=demo</span> (the bundled snapshot instead of live
         observe) · <span class="pin">rbac.writeNamespaces={staging}</span> (grant the fenced Act verbs in
         listed namespaces only — everywhere else the API server itself refuses) ·
