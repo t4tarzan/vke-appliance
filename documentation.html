@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>VKE — Documentation</title>
 <meta name="description" content="VKE user manual, technical architecture, and API reference.">
-<link rel="icon" href="public/icon.svg" type="image/svg+xml">
+<link rel="icon" href="/public/icon.svg" type="image/svg+xml">
 <style>
   :root{
     --milk:#F4F6F9; --paper:#FFFFFF; --ink:#131A24; --body:#293341; --muted:#5D6B7E; --subtle:#93A0B1;
@@ -96,19 +96,35 @@ open http://localhost:9040</pre>
         list the host's containers (then Settings → Clusters → Discover). The bundled watchtower makes
         Settings → Updates a true in-place update. <span class="pin">docker compose down -v</span> is a
         factory reset; without <span class="pin">-v</span> your data and trained models survive restarts.</p>
+      <p><b>Fully air-gapped sites (zero internet, ever):</b> VKE 1.3.0 ships as a <b>signed offline
+        bundle</b> — every image (models inside), the compose, the Helm chart, the docs and a local
+        update channel in one artifact that travels on a disk. On the offline host:
+        <span class="pin">./verify.sh</span> (checks every byte against a cryptographically signed
+        manifest, no network needed) then <span class="pin">./install.sh</span>; for clusters,
+        <span class="pin">./mirror-host.sh &lt;your-registry&gt;</span> loads everything into your own
+        Harbor/private registry. Every bundle is release-gated by a sealed acceptance walk — it boots and
+        passes its full test inside a network Docker itself blocks. Bundles are delivered on request
+        (~11GB). Future updates arrive as the next signed bundle and surface in Settings → Updates.</p>
 
       <h3>3 · In-cluster — one helm install into any Kubernetes</h3>
       <p>The product deploy: VKE runs <em>inside</em> your cluster and observes it through its own
         ServiceAccount — read-only by RBAC until you grant more.</p>
-      <pre>helm install vke ./deploy/helm/vke --namespace vke --create-namespace \
+      <p>The chart is published as a <b>public OCI package</b> — no repo clone, no credentials,
+        works on x86 and ARM clusters alike (all images are multi-arch):</p>
+      <pre>helm install vke oci://ghcr.io/t4tarzan/charts/vke --version 1.3.0 \
+  --namespace vke --create-namespace \
   --set ai.baseUrl=http://&lt;your-ollama-or-gateway&gt;:11434 \
   --set ai.model=qwen2.5:7b</pre>
       <p>Useful values: <span class="pin">clusterMode=demo</span> (the bundled snapshot instead of live
         observe) · <span class="pin">rbac.writeNamespaces={staging}</span> (grant the fenced Act verbs in
         listed namespaces only — everywhere else the API server itself refuses) ·
         <span class="pin">trainer.enabled=true</span> (the trainer sidecar: the Training Studio trains
-        in-cluster and imports the result into your Ollama) · <span class="pin">service.nodePort</span>
-        (default 30940). Reach it via the NodePort or
+        in-cluster and imports the result into your Ollama) ·
+        <span class="pin">vllm.enabled=true</span> (a GPU vLLM serving tier with zero-restart
+        runtime-LoRA promotes — the high-throughput lane for hundreds of API users) ·
+        <span class="pin">airgap.enabled=true</span> (seal the platform: every internet egress off,
+        updates from a local <span class="pin">file://</span> channel) ·
+        <span class="pin">service.nodePort</span> (default 30940). Reach it via the NodePort or
         <span class="pin">kubectl -n vke port-forward svc/vke 9040:9040</span>. Updates are a
         <span class="pin">helm upgrade</span> (a pod can't replace its own image); removal is
         <span class="pin">helm uninstall vke -n vke</span>.</p>

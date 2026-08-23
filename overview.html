@@ -102,13 +102,15 @@
         <td><b>Real CPU LoRA</b> (HF peft, minutes) → GGUF → auto-imported into the bundled Ollama. <b>Four trainable bases baked into the trainer image</b> (Qwen&nbsp;0.5B · Llama&nbsp;3.2&nbsp;1B · Gemma&nbsp;3&nbsp;1B · SmolLM2&nbsp;1.7B) — the dropdown works fully air-gapped.</td>
         <td>Demo snapshot; mount <span class="mono">~/.kube</span> or the docker socket to attach the real environment.</td>
         <td>Any machine with Docker — Mac or DGX or Linux — especially <b>air-gapped</b> sites: everything is inside the images, nothing leaves.</td>
-        <td>CPU training (slower than MLX/GPU). Multi-arch images (amd64 + arm64) — Intel and ARM hosts alike. Watchtower handles its own updates.</td>
+        <td>CPU training (slower than MLX/GPU). Multi-arch images (amd64 + arm64) — Intel and ARM hosts alike. Watchtower handles its own updates. Zero-internet sites: the same shape ships as a <b>signed offline bundle</b> (verify → install on a disconnected host; local file:// update channel).</td>
       </tr>
       <tr>
         <td><b>⎈ In-cluster</b><br><span class="pill">the product deploy</span></td>
-        <td>One <span class="mono">helm install</span>; <span class="mono">helm uninstall</span> removes it.</td>
+        <td>One command from the <b>public OCI chart</b> — no clone, no credentials:<br>
+          <span class="mono">helm install vke oci://ghcr.io/t4tarzan/charts/vke --version 1.3.0 -n vke --create-namespace</span>.<br>
+          <span class="mono">helm uninstall vke -n vke</span> removes it.</td>
         <td>Any OpenAI-compatible endpoint via <span class="mono">ai.baseUrl</span> — e.g. the cluster host's own GPU Ollama.</td>
-        <td>Optional <b>trainer sidecar</b> (<span class="mono">trainer.enabled</span>) — the same baked-bases image; trains inside the cluster, imports into your Ollama.</td>
+        <td>Optional <b>trainer sidecar</b> (<span class="mono">trainer.enabled</span>) — the same baked-bases image; trains inside the cluster, imports into your Ollama. Optional <b>vLLM tier</b> (<span class="mono">vllm.enabled</span>) — GPU serving with zero-restart runtime-LoRA promotes.</td>
         <td><b>The cluster it's deployed into</b>, through its own ServiceAccount.</td>
         <td>Production and pilots on real Kubernetes: read-only by RBAC, Act granted per-namespace (<span class="mono">rbac.writeNamespaces</span>) — the API server itself enforces the boundary.</td>
         <td>A pod can't replace its own image — updates are a <span class="mono">helm upgrade</span>. AI endpoint is yours to point at.</td>
@@ -318,7 +320,7 @@
 
 <div class="foot"><div class="wide" style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px">
   <span>VKE · dkube.io — <a href="index.html">product page</a> · <a href="documentation.html">documentation</a> · <a href="dataset-formats.html">data formats</a></span>
-  <span>run it: <span class="mono">curl -fsSL …/vke-appliance/main/install-macos.sh | bash</span> · <span class="mono">docker compose up</span> · <span class="mono">helm install vke</span></span>
+  <span>run it: <span class="mono">curl -fsSL …/vke-appliance/main/install-macos.sh | bash</span> · <span class="mono">docker compose up</span> · <span class="mono">helm install vke oci://ghcr.io/t4tarzan/charts/vke</span> · air-gapped: the signed offline bundle</span>
 </div></div>
 
 </body>
