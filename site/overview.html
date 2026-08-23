@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VKE — Overview: the four shapes &amp; the learning loop</title>
+<meta name="description" content="One engineer, four deployment shapes, one self-improving loop — what VKE is today, which shape to run where, and how Observe → Learn → Iterate compounds.">
+<link rel="icon" href="public/icon.svg" type="image/svg+xml">
+<style>
+  :root{
+    --milk:#F4F6F9; --paper:#FFFFFF; --ink:#131A24; --body:#293341;
+    --muted:#5D6B7E; --subtle:#93A0B1; --hair:#E3E8EF; --hair-strong:#D2DAE4;
+    --brand:#1E5AA8; --brand-deep:#143E77; --brand-wash:#E9F0FA; --brand-hair:#CDDCEF;
+    --teal:#119A92; --teal-wash:#E4F4F2; --amber:#DAA520; --coral:#C6552F; --ok:#1F9D57;
+    --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --r-md:12px; --r-lg:18px;
+    --sh-sm:0 1px 2px rgba(19,26,36,.05); --sh-md:0 14px 40px rgba(20,62,119,.10);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--milk);color:var(--body);font-family:var(--sans);font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:var(--serif);color:var(--ink);margin:0;font-weight:600;letter-spacing:-.012em;text-wrap:balance}
+  h1{font-size:clamp(30px,4.6vw,44px);line-height:1.08}
+  h2{font-size:clamp(24px,3.2vw,32px);line-height:1.15}
+  h3{font-size:19px;line-height:1.25}
+  p{margin:.6em 0}
+  a{color:var(--brand);text-decoration:none}
+  .eyebrow{font-weight:700;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--brand)}
+  .mono{font-family:var(--mono)}
+  .wide{max-width:1080px;margin:0 auto;padding:0 24px}
+  .col{max-width:860px;margin:0 auto;padding:0 24px}
+  section{padding:56px 0;border-bottom:1px solid var(--hair)}
+  section.tint{background:var(--paper)}
+  .mast{background:var(--paper);border-bottom:1px solid var(--hair-strong)}
+  .mast .wide{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-top:12px;padding-bottom:12px}
+  .mast span{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .card{background:var(--paper);border:1px solid var(--hair);border-radius:var(--r-lg);padding:22px;box-shadow:var(--sh-sm)}
+  .card .ic{font-size:22px}.card h3{margin:8px 0 6px}.card p{font-size:14.5px;margin:0}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}@media(max-width:760px){.grid3{grid-template-columns:1fr}}
+  .pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--brand-wash);color:var(--brand-deep);white-space:nowrap}
+  .pill.ok{background:#E7F5EC;color:var(--ok)}.pill.t{background:var(--teal-wash);color:#0C726C}
+  .tablewrap{overflow-x:auto;border:1px solid var(--hair);border-radius:var(--r-lg);background:var(--paper);box-shadow:var(--sh-sm)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:860px}
+  th,td{text-align:left;padding:11px 13px;border-bottom:1px solid var(--hair);vertical-align:top}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--brand-wash)}
+  tr:last-child td{border-bottom:none}
+  td b{color:var(--ink)}
+  .callout{background:var(--brand-wash);border:1px solid var(--brand-hair);border-radius:var(--r-lg);padding:20px 22px}
+  .lede{font-size:18px;color:var(--body)}
+  .diagram{background:var(--paper);border:1px solid var(--hair);border-radius:var(--r-lg);padding:18px;box-shadow:var(--sh-sm);overflow-x:auto}
+  .kicker{font-family:var(--mono);font-size:11.5px;color:var(--teal);letter-spacing:.06em}
+  .steps{counter-reset:s}
+  .step{display:flex;gap:16px;margin-top:18px}
+  .step .n{flex:0 0 34px;height:34px;border-radius:50%;background:var(--brand);color:#fff;font-family:var(--mono);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:14px}
+  .foot{background:var(--ink);color:#B7C4D6;padding:34px 0;font-size:13px}
+  .foot a{color:#fff}
+</style>
+</head>
+<body>
+
+<div class="mast"><div class="wide">
+  <span>dkube.io · Velocity Team · One Convergence</span>
+  <span>VKE v1.2.x · overview — the four shapes, the data pipeline &amp; the learning loop</span>
+</div></div>
+
+<section class="tint"><div class="col">
+  <div class="eyebrow">Virtual Kubernetes Engineer — where it stands</div>
+  <h1>One engineer. Four ways to run it. A loop that compounds.</h1>
+  <p class="lede">VKE is a self-improving SRE platform: ~35 role-gated tiles across
+  <b>Observe · Converse · Act · Learn · Oversight · Admin</b>, all views over one append-only,
+  hash-chained event log. It watches a cluster, proposes fenced fixes behind human approval,
+  and — the differentiator — <b>turns its own incident history into training data</b>. The
+  Training Studio takes anyone from "pick a model" to "chat with the model you just trained"
+  in five guided steps, with a cost gate before anything runs and a real loss curve while it does.</p>
+  <p class="lede">All of that now ships <b>four ways from one codebase</b>, on one version channel
+  (Settings → Updates), with in-app support tickets, and a release pipeline whose <em>additive
+  gate</em> refuses any change that would break a shape.</p>
+</div></section>
+
+<section><div class="wide">
+  <div class="eyebrow">The four shapes</div>
+  <h2>Which one, where, and why.</h2>
+  <p style="max-width:760px">Same code, same studio, same update channel — the shapes differ only in
+  what carries the AI, what carries the training, and what the install touches.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Shape</th><th>Install / uninstall</th><th>AI engine</th><th>Training</th><th>Cluster it observes</th><th>Use it when…</th><th>Boundaries</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>🍎 Native macOS</b><br><span class="pill ok">fastest studio</span></td>
+        <td>One <span class="mono">curl | bash</span> → <span class="mono">~/.vke</span> + one launch agent.<br><span class="mono">vke uninstall</span> removes it cleanly.</td>
+        <td><b>MLX on Metal</b> (mlx_lm.server) — Apple-silicon native speed.</td>
+        <td><b>Real MLX LoRA, ~15s</b> per run; fused weights served by path, hot-swapped on promote. Trainable bases: Qwen&nbsp;0.5B + <b>Llama&nbsp;3.2&nbsp;1B · Gemma&nbsp;3&nbsp;1B · SmolLM2&nbsp;1.7B pre-fetched at install</b>; Mistral&nbsp;7B on demand.</td>
+        <td>Auto-detects any kubeconfig on the Mac; demo snapshot otherwise.</td>
+        <td>An Apple-silicon laptop or studio — evaluation, development, the best training demo. No Docker allowed/wanted.</td>
+        <td>macOS arm64 only. Models download on first boot (~1.2GB) — not air-gapped by default.</td>
+      </tr>
+      <tr>
+        <td><b>📦 Appliance</b><br><span class="pill t">most portable</span></td>
+        <td><span class="mono">docker compose up</span> — three images from ghcr.<br><span class="mono">compose down -v</span> = factory reset.</td>
+        <td><b>Bundled Ollama</b> (qwen2.5 1.5b + 0.5b baked into the image).</td>
+        <td><b>Real CPU LoRA</b> (HF peft, minutes) → GGUF → auto-imported into the bundled Ollama. <b>Four trainable bases baked into the trainer image</b> (Qwen&nbsp;0.5B · Llama&nbsp;3.2&nbsp;1B · Gemma&nbsp;3&nbsp;1B · SmolLM2&nbsp;1.7B) — the dropdown works fully air-gapped.</td>
+        <td>Demo snapshot; mount <span class="mono">~/.kube</span> or the docker socket to attach the real environment.</td>
+        <td>Any machine with Docker — Mac or DGX or Linux — especially <b>air-gapped</b> sites: everything is inside the images, nothing leaves.</td>
+        <td>CPU training (slower than MLX/GPU). Multi-arch images (amd64 + arm64) — Intel and ARM hosts alike. Watchtower handles its own updates. Zero-internet sites: the same shape ships as a <b>signed offline bundle</b> (verify → install on a disconnected host; local file:// update channel).</td>
+      </tr>
+      <tr>
+        <td><b>⎈ In-cluster</b><br><span class="pill">the product deploy</span></td>
+        <td>One command from the <b>public OCI chart</b> — no clone, no credentials:<br>
+          <span class="mono">helm install vke oci://ghcr.io/t4tarzan/charts/vke --version 1.3.0 -n vke --create-namespace</span>.<br>
+          <span class="mono">helm uninstall vke -n vke</span> removes it.</td>
+        <td>Any OpenAI-compatible endpoint via <span class="mono">ai.baseUrl</span> — e.g. the cluster host's own GPU Ollama.</td>
+        <td>Optional <b>trainer sidecar</b> (<span class="mono">trainer.enabled</span>) — the same baked-bases image; trains inside the cluster, imports into your Ollama. Optional <b>vLLM tier</b> (<span class="mono">vllm.enabled</span>) — GPU serving with zero-restart runtime-LoRA promotes.</td>
+        <td><b>The cluster it's deployed into</b>, through its own ServiceAccount.</td>
+        <td>Production and pilots on real Kubernetes: read-only by RBAC, Act granted per-namespace (<span class="mono">rbac.writeNamespaces</span>) — the API server itself enforces the boundary.</td>
+        <td>A pod can't replace its own image — updates are a <span class="mono">helm upgrade</span>. AI endpoint is yours to point at.</td>
+      </tr>
+      <tr>
+        <td><b>🛠 Native (dev)</b><br><span class="pill">the kitchen</span></td>
+        <td>The source checkout + a process manager (how it runs on the build machine).</td>
+        <td>The full local gateway + model fleet (Switchboard/MLX).</td>
+        <td>The full factory: MLX via the Foundry control plane, RunPod/SkyPilot burst behind a settings toggle.</td>
+        <td>The machine's live kubeconfig context (a real k3s in our case).</td>
+        <td>Developing VKE itself; the reference install every release is cut from.</td>
+        <td>Not a distribution target — clients get the three shapes above.</td>
+      </tr>
+    </tbody>
+  </table></div>
+  <div class="callout" style="margin-top:18px"><b>Model guidance inside every shape:</b> the bundled
+  <span class="mono">qwen2.5:1.5b</span>-class model carries chat and grounding. For training, the Studio's
+  dropdown offers a real catalog — <span class="mono">Qwen&nbsp;2.5&nbsp;0.5B</span> (the fastest workhorse:
+  seconds on MLX, minutes on CPU — ideal for the append-data → v2 → watch-the-overlay story),
+  <span class="mono">Llama&nbsp;3.2&nbsp;1B</span>, <span class="mono">Gemma&nbsp;3&nbsp;1B</span> and
+  <span class="mono">SmolLM2&nbsp;1.7B</span> (all <b>bundled, air-gap safe</b>), plus
+  <span class="mono">Mistral&nbsp;7B</span> on demand for GPU hosts. Every trained import carries its base
+  family's chat template (ChatML · Llama&nbsp;3 · Gemma · Mistral — Gemma's system turn is folded
+  automatically), so answers come back in the grammar the base was pre-trained on. On a DGX, point
+  <span class="mono">ai.baseUrl</span> at the host Ollama and chat rides whatever you've pulled (7B–32B
+  class). The <span class="mono">k8s-sre</span> alias never changes its name — retraining just hot-swaps
+  what answers behind it.</div>
+</div></section>
+
+<section class="tint"><div class="wide">
+  <div class="eyebrow">Architecture</div>
+  <h2>How VKE works — one log, three faculties, one alias.</h2>
+  <div class="diagram" style="margin-top:18px">
+  <svg viewBox="0 0 940 430" style="width:100%;min-width:760px;height:auto" font-family="ui-sans-serif,system-ui" font-size="13">
+    <defs>
+      <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#5D6B7E"/></marker>
+      <marker id="arb" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#1E5AA8"/></marker>
+      <marker id="art" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#119A92"/></marker>
+    </defs>
+    <!-- cluster -->
+    <rect x="20" y="40" width="200" height="120" rx="14" fill="#E9F0FA" stroke="#CDDCEF"/>
+    <text x="120" y="66" text-anchor="middle" font-weight="700" fill="#143E77">Your cluster</text>
+    <text x="120" y="88" text-anchor="middle" fill="#5D6B7E" font-size="12">pods · nodes · events</text>
+    <text x="120" y="112" text-anchor="middle" fill="#5D6B7E" font-size="11.5">ServiceAccount / kubeconfig</text>
+    <text x="120" y="132" text-anchor="middle" fill="#1F9D57" font-size="11.5" font-weight="700">read-only by RBAC</text>
+    <!-- console -->
+    <rect x="300" y="20" width="320" height="160" rx="14" fill="#FFFFFF" stroke="#D2DAE4"/>
+    <text x="460" y="46" text-anchor="middle" font-weight="700" fill="#131A24">VKE console</text>
+    <text x="460" y="66" text-anchor="middle" fill="#5D6B7E" font-size="12">Observe · Converse · Act · Learn · Oversight</text>
+    <rect x="320" y="80" width="280" height="38" rx="8" fill="#131A24"/>
+    <text x="460" y="104" text-anchor="middle" fill="#C4D3E6" font-family="ui-monospace,Menlo" font-size="12">append-only · hash-chained EVENT LOG</text>
+    <text x="460" y="140" text-anchor="middle" fill="#5D6B7E" font-size="11.5">every observation, proposal, approval,</text>
+    <text x="460" y="156" text-anchor="middle" fill="#5D6B7E" font-size="11.5">action &amp; outcome — tamper-evident</text>
+    <!-- HITL -->
+    <rect x="700" y="40" width="215" height="80" rx="14" fill="#FFF7E6" stroke="#EAD9A8"/>
+    <text x="807" y="66" text-anchor="middle" font-weight="700" fill="#8A6A14">Human in the loop</text>
+    <text x="807" y="86" text-anchor="middle" fill="#8A6A14" font-size="12">approve in-app or on Telegram</text>
+    <text x="807" y="104" text-anchor="middle" fill="#8A6A14" font-size="11.5">fence: scale · restart — never delete</text>
+    <!-- studio -->
+    <rect x="300" y="240" width="320" height="120" rx="14" fill="#E4F4F2" stroke="#B7E0DC"/>
+    <text x="460" y="266" text-anchor="middle" font-weight="700" fill="#0C726C">Training Studio</text>
+    <text x="460" y="288" text-anchor="middle" fill="#0C726C" font-size="12">model → data → cost gate → train → watch</text>
+    <text x="460" y="308" text-anchor="middle" fill="#0C726C" font-size="11.5">MLX (mac) · CPU LoRA (appliance) · sidecar (k8s)</text>
+    <text x="460" y="330" text-anchor="middle" fill="#0C726C" font-size="11.5">run history · real v1 → v2 loss overlay</text>
+    <!-- alias -->
+    <rect x="700" y="250" width="215" height="100" rx="14" fill="#E9F0FA" stroke="#CDDCEF"/>
+    <text x="807" y="278" text-anchor="middle" font-weight="700" fill="#143E77">Stable alias  ·  k8s-sre</text>
+    <text x="807" y="300" text-anchor="middle" fill="#5D6B7E" font-size="12">promote = hot-swap the weights</text>
+    <text x="807" y="320" text-anchor="middle" fill="#5D6B7E" font-size="11.5">grounded chat · predictions · replay-verify</text>
+    <text x="807" y="340" text-anchor="middle" fill="#5D6B7E" font-size="11.5">consumers never reconfigure</text>
+    <!-- arrows -->
+    <path d="M222 80 L296 80" stroke="#5D6B7E" stroke-width="1.6" marker-end="url(#ar)"/>
+    <text x="258" y="72" text-anchor="middle" fill="#5D6B7E" font-size="11">observe</text>
+    <path d="M622 70 L696 70" stroke="#1E5AA8" stroke-width="1.6" marker-end="url(#arb)"/>
+    <text x="659" y="62" text-anchor="middle" fill="#1E5AA8" font-size="11">propose</text>
+    <path d="M700 100 L622 100" stroke="#DAA520" stroke-width="1.6" marker-end="url(#ar)"/>
+    <text x="661" y="116" text-anchor="middle" fill="#8A6A14" font-size="11">approve</text>
+    <path d="M298 120 L222 120" stroke="#C6552F" stroke-width="1.6" marker-end="url(#ar)"/>
+    <text x="258" y="136" text-anchor="middle" fill="#C6552F" font-size="11">fenced act</text>
+    <path d="M460 182 L460 236" stroke="#119A92" stroke-width="1.8" marker-end="url(#art)"/>
+    <text x="540" y="212" text-anchor="middle" fill="#119A92" font-size="11.5">history → training rows</text>
+    <path d="M622 300 L696 300" stroke="#119A92" stroke-width="1.8" marker-end="url(#art)"/>
+    <text x="659" y="292" text-anchor="middle" fill="#119A92" font-size="11">promote</text>
+    <path d="M807 250 C 807 200, 700 180, 624 168" stroke="#1E5AA8" stroke-width="1.4" stroke-dasharray="5 4" fill="none" marker-end="url(#arb)"/>
+    <text x="770" y="205" text-anchor="middle" fill="#1E5AA8" font-size="11">smarter answers, next incident</text>
+    <!-- channel -->
+    <rect x="20" y="380" width="895" height="34" rx="10" fill="#F4F6F9" stroke="#E3E8EF"/>
+    <text x="467" y="402" text-anchor="middle" fill="#5D6B7E" font-size="12">one version channel · Settings → Updates (shape-aware) · Settings → Tickets → the issue tracker · released by one command behind the additive gate</text>
+  </svg>
+  </div>
+</div></section>
+
+<section><div class="wide">
+  <div class="eyebrow">The data pipeline</div>
+  <h2>Bring your telemetry in any shape — it leaves as one.</h2>
+  <p style="max-width:780px">The Studio's <b>Add data</b> step accepts seven upload shapes and normalizes
+  every one to the same canonical chat-messages JSONL, so the three trainers share a single input contract.
+  Full worked examples — one incident shown in every shape — live in the
+  <a href="dataset-formats.html"><b>Data formats</b></a> reference.</p>
+  <div class="tablewrap" style="margin-top:14px"><table>
+    <thead><tr><th>Accepted shapes</th><th>What happens to every row</th></tr></thead>
+    <tbody><tr>
+      <td><b>JSONL</b> — <span class="mono">messages</span> (canonical) · <span class="mono">prompt/completion</span> ·
+        <span class="mono">instruction/output</span> · <span class="mono">input/output</span> ·
+        <span class="mono">q/a</span> · <span class="mono">user/assistant</span><br>
+        <b>CSV / TSV</b> — first two columns, header auto-skipped<br>
+        <b>XLSX</b> — first sheet, read natively (no export step)<br>
+        <b>XML</b> — repeated elements with any pair tags<br>
+        <b>YAML</b> — a list of pair items<br>
+        <b>Markdown</b> — <span class="mono">Q:/A:</span> pairs or <span class="mono">##</span>-heading → body</td>
+      <td><b>Normalize</b> — every shape → one chat-messages row (default SRE persona added where absent).<br>
+        <b>PII anonymize, reversibly</b> — emails, IPs, API keys and JWTs become consistent numbered tokens
+        (<span class="mono">[IP_1]</span>…) via a local 0600 vault; <b>fix proposals are deanonymized</b>, so the
+        applied fix carries the real values. Service names are deliberately kept — they <em>are</em> the signal.<br>
+        <b>Skip &amp; count</b> — messy rows skip, never fail the upload.<br>
+        <b>Append</b> — grows a set for the v2-retrain story.<br>
+        <b>Family template</b> — trained imports serve through their base family's chat grammar.</td>
+    </tr></tbody>
+  </table></div>
+
+  <h2 style="margin-top:40px">Six case studies, pre-seeded and downloadable.</h2>
+  <p style="max-width:780px">Synthetic datasets generated (<span class="mono">bin/gen_case_datasets.py</span>,
+  deterministic) from a real 43-table SRE-platform schema — each <b>group of suited tables</b> exported in a
+  <em>different</em> format, so every download also exercises one parser. The JSONL twins are pre-seeded in
+  the Studio's dataset picker; the raw files are downloadable at <span class="mono">/case-studies/</span>.</p>
+  <div class="tablewrap" style="margin-top:14px"><table>
+    <thead><tr><th>Case study</th><th>Suited tables</th><th>Format · rows</th><th>What it teaches / demos</th></tr></thead>
+    <tbody>
+      <tr><td><b>k8s incidents</b></td><td class="mono">kubernetes_events · kubernetes_pod_status · alert_log</td>
+        <td>JSONL · <a href="case-studies/k8s-incidents-60.jsonl" download>60 ⬇</a> + <a href="case-studies/k8s-incidents-append-30.jsonl" download>append-30 ⬇</a></td><td>evidence → diagnosis → fenced fix; the append set powers the real v1→v2 loss overlay</td></tr>
+      <tr><td><b>leak predictions</b></td><td class="mono">predictions · ml_use_cases · prediction_cache</td>
+        <td><a href="case-studies/leak-predictions-40.csv" download>CSV · 40 ⬇</a></td><td>read the LSTM/RF/isolation-forest ensemble and decide act / watch / ignore</td></tr>
+      <tr><td><b>SOP knowledge</b></td><td class="mono">sop_registry · sop_gaps · sop_effectiveness</td>
+        <td><a href="case-studies/sop-knowledge-30.md" download>Markdown · 30 ⬇</a></td><td>operator questions answered from the runbook registry, incl. closed sop_gaps</td></tr>
+      <tr><td><b>expert feedback</b></td><td class="mono">expert_feedback · model_performance · model_promotion_log</td>
+        <td><a href="case-studies/expert-feedback-30.yml" download>YAML · 30 ⬇</a></td><td>ratings + outcomes → retrain / promote / demote decisions</td></tr>
+      <tr><td><b>pattern signatures</b></td><td class="mono">pattern_signatures · pod_baselines · comprehensive_metrics</td>
+        <td><a href="case-studies/pattern-signatures-30.xml" download>XML · 30 ⬇</a></td><td>reading sawtooth / stair-step / throttle-plateau telemetry patterns correctly</td></tr>
+      <tr><td><b>agent ops</b></td><td class="mono">agents · agent_status · dag_execution_history · dedup_log</td>
+        <td><a href="case-studies/agent-ops-24.xlsx" download>XLSX · 24 ⬇</a></td><td>keeping the observability plane itself healthy (stale agents, failed DAGs, backlogs)</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout" style="margin-top:22px"><b>Demo it in five minutes</b> — the scripted walk that shows
+  the whole Learn lane on any shape:
+  <div class="steps" style="margin-top:6px">
+    <div class="step"><div class="n">1</div><div><p><b>Pick a model</b> — sign in as the ML engineer, open the
+      Training Studio; choose <span class="mono">gemma-3-1b-it</span> (bundled) to show a non-Qwen family training.</p></div></div>
+    <div class="step"><div class="n">2</div><div><p><b>Show the formats</b> — download
+      <span class="mono">agent-ops-24.xlsx</span> from <a href="dataset-formats.html">Data formats</a> and upload it:
+      a spreadsheet becomes a training set live, PII tokenized on the way in.</p></div></div>
+    <div class="step"><div class="n">3</div><div><p><b>Train behind the cost gate</b> — pick the seeded
+      <span class="mono">k8s-incidents-60</span> case study, Estimate → Confirm; watch the real loss curve fall.</p></div></div>
+    <div class="step"><div class="n">4</div><div><p><b>Promote &amp; chat</b> — hot-swap the
+      <span class="mono">k8s-sre</span> alias, test it in place: the answer comes back through the Gemma template,
+      grounded in the trained incidents.</p></div></div>
+    <div class="step"><div class="n">5</div><div><p><b>Close the loop</b> — append
+      <span class="mono">k8s-incidents-append-30</span>, hit <em>Retrain +data</em>, and show the v1→v2 overlay:
+      more experience, lower loss, same alias.</p></div></div>
+  </div></div>
+</div></section>
+
+<section><div class="col">
+  <div class="eyebrow">Reinforcement learning, optimized</div>
+  <h2>Observe → Learn → Iterate: the loop is the product.</h2>
+  <p class="lede" style="margin-top:10px">VKE runs a reinforcement-learning-<em>shaped</em> flywheel with a
+  human hand on the reward signal. The <b>environment</b> is your cluster. The <b>actions</b> are fenced
+  remediations. The <b>reward</b> is a human approval followed by a verified outcome. And the <b>policy</b>
+  genuinely updates — first as knowledge, then as model weights, then as earned autonomy. Optimized, here,
+  means the expensive parts are gated and the loop never trains on unverified experience.</p>
+
+  <div class="steps">
+    <div class="step"><div class="n">1</div><div>
+      <h3>Observe — dense, cheap, continuous</h3>
+      <p class="kicker">state → the event log</p>
+      <p>Live cluster state, rule-based alerts, and the predictive engine stream into the hash-chained event
+      log. Every incident gets a normalized <em>signature</em> (the state abstraction that makes experience
+      reusable), and the agent loop sweeps hourly so nothing depends on a human watching a dashboard.</p>
+    </div></div>
+    <div class="step"><div class="n">2</div><div>
+      <h3>Learn — reward-filtered experience becomes weights</h3>
+      <p class="kicker">approved outcome → dataset → LoRA → the alias</p>
+      <p>Only trails that ended in an <b>approved, successful</b> fix become incident→fix training rows —
+      the reward filter — and a consensus council can vet each remediation row before export. The Training
+      Studio turns that corpus into a LoRA (seconds on MLX, minutes on CPU), <b>replay-verify</b> checks
+      the trained model reproduces the fixes humans approved, and Promote hot-swaps the
+      <span class="mono">k8s-sre</span> alias onto the new weights. Cloud assistance, where used, is
+      transitional by design: its fixes train the local model until the fix-class no longer needs the cloud.</p>
+    </div></div>
+    <div class="step"><div class="n">3</div><div>
+      <h3>Iterate — more experience, better policy, earned autonomy</h3>
+      <p class="kicker">append → v2 → graduation</p>
+      <p>Append fresh incidents (or your own data) and train v2 <em>on top of</em> v1 — the run history
+      overlays the real loss curves so improvement is visible, not claimed. In parallel, the <b>policy
+      itself graduates</b>: a fix-class moves shadow → proving → learned → <b>autonomous</b> only when it
+      has repeated successes, a high success rate, local-model reproduction, and an explicit human enable —
+      with a circuit breaker and automatic demotion when reality disagrees. That's the exploration/
+      exploitation dial, held by you.</p>
+    </div></div>
+  </div>
+
+  <div class="callout" style="margin-top:26px"><b>Why this converges:</b> every day the corpus grows, the
+  local model reproduces more of the cluster's own fixes, and more fix-classes run without a page. The same
+  loop that fixes your cluster is the loop that trains your engineer — a monitoring tool tells you something
+  broke; VKE gets better at fixing it.</div>
+</div></section>
+
+<div class="foot"><div class="wide" style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px">
+  <span>VKE · dkube.io — <a href="index.html">product page</a> · <a href="documentation.html">documentation</a> · <a href="dataset-formats.html">data formats</a></span>
+  <span>run it: <span class="mono">curl -fsSL …/vke-appliance/main/install-macos.sh | bash</span> · <span class="mono">docker compose up</span> · <span class="mono">helm install vke oci://ghcr.io/t4tarzan/charts/vke</span> · air-gapped: the signed offline bundle</span>
+</div></div>
+
+</body>
+</html>

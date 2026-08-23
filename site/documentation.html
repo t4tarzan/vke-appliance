@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VKE — Documentation</title>
+<meta name="description" content="VKE user manual, technical architecture, and API reference.">
+<link rel="icon" href="/public/icon.svg" type="image/svg+xml">
+<style>
+  :root{
+    --milk:#F4F6F9; --paper:#FFFFFF; --ink:#131A24; --body:#293341; --muted:#5D6B7E; --subtle:#93A0B1;
+    --hair:#E3E8EF; --hair-strong:#D2DAE4; --brand:#1E5AA8; --brand-deep:#143E77; --brand-wash:#E9F0FA; --brand-hair:#CDDCEF;
+    --teal:#119A92; --ok:#1F9D57; --coral:#C6552F;
+    --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --r:12px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--milk);color:var(--body);font-family:var(--sans);font-size:15.5px;line-height:1.62}
+  h1,h2,h3,h4{font-family:var(--serif);color:var(--ink);margin:0;font-weight:600;letter-spacing:-.01em}
+  h1{font-size:34px} h2{font-size:24px;margin-top:8px} h3{font-size:18px}
+  a{color:var(--brand);text-decoration:none} code,.mono{font-family:var(--mono)}
+  .nav{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--hair-strong)}
+  .nav .row{max-width:1000px;margin:0 auto;padding:0 24px;height:54px;display:flex;align-items:center;gap:14px}
+  .nav .name{display:flex;align-items:center;gap:8px;font-family:var(--serif);font-weight:600;font-size:15px;color:var(--ink)}
+  .nav .name svg{width:22px;height:22px}
+  .nav .links{margin-left:auto;display:flex;gap:4px} .nav .links a{font-size:12.5px;color:var(--muted);padding:6px 11px;border-radius:999px}
+  .nav .links a:hover{background:var(--brand-wash);color:var(--brand-deep)}
+  .wrap{max-width:1000px;margin:0 auto;padding:36px 24px;display:grid;grid-template-columns:210px 1fr;gap:36px}
+  @media(max-width:820px){.wrap{grid-template-columns:1fr}}
+  .toc{position:sticky;top:74px;align-self:start;font-size:13px}
+  .toc a{display:block;color:var(--muted);padding:5px 0} .toc a:hover{color:var(--brand-deep)}
+  .toc .h{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--subtle);margin:14px 0 4px;font-weight:700}
+  section{padding:14px 0 26px;border-bottom:1px solid var(--hair)}
+  p{margin:.6em 0} ul{margin:.5em 0;padding-left:20px} li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:14px 0}
+  th,td{text-align:left;padding:8px 11px;border-bottom:1px solid var(--hair);vertical-align:top}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  pre{background:var(--ink);color:#C4D3E6;border-radius:var(--r);padding:14px 16px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.6}
+  .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--brand-wash);color:var(--brand-deep)}
+  .callout{background:var(--brand-wash);border:1px solid var(--brand-hair);border-radius:var(--r);padding:14px 16px;font-size:14px;margin:12px 0}
+  .pin{font-family:var(--mono);background:var(--paper);border:1px solid var(--hair);border-radius:6px;padding:1px 7px}
+</style>
+</head>
+<body>
+<div class="nav"><div class="row">
+  <a class="name" href="/"><svg viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#1E5AA8"/><circle cx="16" cy="16" r="7.5" stroke="#EAF1FA" stroke-width="1.8"/><circle cx="16" cy="16" r="2.4" fill="#EAF1FA"/></svg>VKE</a>
+  <div class="links"><a href="/">← Home</a><a href="#manual">Manual</a><a href="#tech">Technical</a><a href="#api">API</a></div>
+</div></div>
+
+<div class="wrap">
+  <nav class="toc">
+    <div class="h">User manual</div>
+    <a href="#manual">Overview</a><a href="#setup">Setup</a><a href="#features">Features</a><a href="#studio">Training Studio</a><a href="#roles">Roles &amp; login</a><a href="#logins">Demo logins</a><a href="#lanes">The six lanes</a><a href="#loop-walk">A day in the loop</a>
+    <div class="h">Technical</div>
+    <a href="#tech">Architecture</a><a href="#fence">The safety fence</a><a href="#schemas">Data model</a><a href="#deploy">Deployment</a><a href="#demos">Two demo lanes</a>
+    <div class="h">Reference</div>
+    <a href="#api">API</a>
+  </nav>
+
+  <main>
+    <section id="manual">
+      <h1>VKE Documentation</h1>
+      <h2>What VKE is</h2>
+      <p>VKE — the Virtual Kubernetes Engineer — is a self-improving SRE platform. It runs as <b>one process</b>
+        against any Kubernetes cluster and unifies three faculties that a monitoring tool keeps separate:
+        <b>Observe</b> (live cluster state + chat + prediction), <b>Act</b> (fenced remediation with
+        human-in-the-loop approval), and <b>Learn</b> (its own incident history trains a local model that makes
+        the engineer better every day). Every surface is a view over one append-only, tamper-evident event log.</p>
+    </section>
+
+    <section id="setup">
+      <h2>Setup — the four ways to run VKE</h2>
+      <p>Same product, same Training Studio, same update channel — pick the shape that fits the machine
+        in front of you. Every install is equally easy to remove.</p>
+
+      <h3>1 · Native macOS — Apple silicon, MLX, no Docker</h3>
+      <p>The fastest experience: Metal-speed model serving and real MLX LoRA finetunes in ~15 seconds.
+        Installs into <span class="pin">~/.vke</span> with a single launch agent — no sudo, no Docker.</p>
+      <pre>curl -fsSL https://raw.githubusercontent.com/t4tarzan/vke-appliance/main/install-macos.sh | bash</pre>
+      <p>First boot downloads ~1.2GB of models, then the browser opens on <span class="pin">http://localhost:9040</span>.
+        Manage it with <span class="pin">vke status</span> · <span class="pin">vke logs</span> ·
+        <span class="pin">vke stop</span>; remove it completely with <span class="pin">vke uninstall</span>.
+        Custom ports: prefix the installer with <span class="pin">VKE_PORT=8080</span>. Updates apply in one
+        click from Settings → Updates (the app swaps its own bundle and restarts).</p>
+
+      <h3>2 · Appliance — docker compose, everything bundled</h3>
+      <p>Three images carry the app, the AI models and a real CPU trainer — fully offline after the pull,
+        which makes this the shape for air-gapped sites and any machine with Docker (Mac, DGX, Linux).</p>
+      <pre>curl -O https://raw.githubusercontent.com/t4tarzan/vke-appliance/main/docker-compose.yml
+docker compose up -d
+open http://localhost:9040</pre>
+      <p>Attach your real environment by uncommenting one line in the compose file —
+        <span class="pin">~/.kube:/root/.kube:ro</span> to observe your cluster, or the docker socket to
+        list the host's containers (then Settings → Clusters → Discover). The bundled watchtower makes
+        Settings → Updates a true in-place update. <span class="pin">docker compose down -v</span> is a
+        factory reset; without <span class="pin">-v</span> your data and trained models survive restarts.</p>
+      <p><b>Fully air-gapped sites (zero internet, ever):</b> VKE 1.3.0 ships as a <b>signed offline
+        bundle</b> — every image (models inside), the compose, the Helm chart, the docs and a local
+        update channel in one artifact that travels on a disk. On the offline host:
+        <span class="pin">./verify.sh</span> (checks every byte against a cryptographically signed
+        manifest, no network needed) then <span class="pin">./install.sh</span>; for clusters,
+        <span class="pin">./mirror-host.sh &lt;your-registry&gt;</span> loads everything into your own
+        Harbor/private registry. Every bundle is release-gated by a sealed acceptance walk — it boots and
+        passes its full test inside a network Docker itself blocks. Bundles are delivered on request
+        (~11GB). Future updates arrive as the next signed bundle and surface in Settings → Updates.</p>
+
+      <h3>3 · In-cluster — one helm install into any Kubernetes</h3>
+      <p>The product deploy: VKE runs <em>inside</em> your cluster and observes it through its own
+        ServiceAccount — read-only by RBAC until you grant more.</p>
+      <p>The chart is published as a <b>public OCI package</b> — no repo clone, no credentials,
+        works on x86 and ARM clusters alike (all images are multi-arch):</p>
+      <pre>helm install vke oci://ghcr.io/t4tarzan/charts/vke --version 1.3.0 \
+  --namespace vke --create-namespace \
+  --set ai.baseUrl=http://&lt;your-ollama-or-gateway&gt;:11434 \
+  --set ai.model=qwen2.5:7b</pre>
+      <p>Useful values: <span class="pin">clusterMode=demo</span> (the bundled snapshot instead of live
+        observe) · <span class="pin">rbac.writeNamespaces={staging}</span> (grant the fenced Act verbs in
+        listed namespaces only — everywhere else the API server itself refuses) ·
+        <span class="pin">trainer.enabled=true</span> (the trainer sidecar: the Training Studio trains
+        in-cluster and imports the result into your Ollama) ·
+        <span class="pin">vllm.enabled=true</span> (a GPU vLLM serving tier with zero-restart
+        runtime-LoRA promotes — the high-throughput lane for hundreds of API users) ·
+        <span class="pin">airgap.enabled=true</span> (seal the platform: every internet egress off,
+        updates from a local <span class="pin">file://</span> channel) ·
+        <span class="pin">service.nodePort</span> (default 30940). Reach it via the NodePort or
+        <span class="pin">kubectl -n vke port-forward svc/vke 9040:9040</span>. Updates are a
+        <span class="pin">helm upgrade</span> (a pod can't replace its own image); removal is
+        <span class="pin">helm uninstall vke -n vke</span>.</p>
+
+      <h3>4 · Native (source) — the development shape</h3>
+      <p>The reference install every release is cut from: the source checkout run by a process manager,
+        with the full local model gateway and the MLX training factory. This is how VKE is developed —
+        clients use the three shapes above. Sign-in for every shape:
+        <span class="pin">U-ML / 3333</span> (ML engineer) · <span class="pin">U-LEAD / 1111</span> (SRE lead) ·
+        <span class="pin">U-OPS / 2222</span> (operator) · <span class="pin">U-DEMO / 0000</span> (read-only).</p>
+    </section>
+
+    <section id="features">
+      <h2>Features</h2>
+      <p>VKE is one app of ~35 role-gated tiles across six lanes — Observe, Converse, Act, Learn, Oversight and
+        Admin. Every surface is a view over the same append-only, hash-chained event log.</p>
+
+      <h3>Observe — the cluster's live state</h3>
+      <ul>
+        <li><b>Cluster Overview</b> — nodes ready · pods running · restarts · health rings, live.</li>
+        <li><b>Nodes</b> — capacity, conditions and pressure signals, per node.</li>
+        <li><b>Workloads</b> — deployments/statefulsets/daemonsets + pods; drill a pod to logs, describe and events in a side drawer.</li>
+        <li><b>Services</b> — the host process fleet (pm2) with restarts, memory and logs, alongside Helm releases and Robot test suites.</li>
+        <li><b>Topology</b> — the namespace → workload → pod → node graph.</li>
+        <li><b>Cluster Events</b> — the live Kubernetes event stream, severity-filtered.</li>
+        <li><b>Alerts</b> — rule-based watchers; each firing alert carries a normalized issue-signature.</li>
+        <li><b>Telemetry</b> — Health · Metrics · Logs · Traces (OTel-ready; live from the cluster and the event log).</li>
+        <li><b>Discovery</b> — cluster + cloud adapter registry (kubernetes live; AWS/Azure/GCP/RunWhen pluggable).</li>
+        <li><b>Cloud</b> — multi-cloud account inventory (GKE/EKS/AKS · compute · databases · storage · load balancers).</li>
+      </ul>
+
+      <h3>Converse — ask the engineer</h3>
+      <ul>
+        <li><b>Chat</b> — grounded in the live cluster and this cluster's own fix history; pick <span class="pill">k8s-sre</span> to answer from history, or deep·claude.</li>
+        <li><b>Playbooks</b> — built-in runbooks plus cards generated from proven fixes.</li>
+        <li><b>Search</b> — across pods, events, the event log and the knowledge base.</li>
+      </ul>
+
+      <h3>Act — remediate, with a human in the loop</h3>
+      <ul>
+        <li><b>Incidents</b> — the six-section incident chart, keyed on the issue signature.</li>
+        <li><b>Approvals</b> — the HITL queue; approve on screen or from Telegram (no self-approval).</li>
+        <li><b>Action Console</b> — the one fenced mutation surface: scale · rollout-restart only.</li>
+        <li><b>Autonomy Board</b> — T0/T1/T2 tiers, graduation gates and the circuit breaker (T0 off by default).</li>
+        <li><b>Predict</b> — what's likely to fire next, from restart trends and pressure forecasts.</li>
+      </ul>
+
+      <h3>Learn — the factory (also runs standalone)</h3>
+      <ul>
+        <li><b>History</b> — the append-only, hash-chained event log: the training corpus.</li>
+        <li><b>Knowledge Base</b> — issue signatures × proven fixes × outcomes.</li>
+        <li><b>Datasets</b> — build, consensus-verify and export SFT rows from the log — or <b>upload your own</b> (JSONL/CSV, normalized + PII-redacted, with append).</li>
+        <li><b>Training Studio</b> — the five-step guided finetune flow: model → data → cost-gated train → watch → serve &amp; chat (<a href="#studio">details below</a>).</li>
+        <li><b>Models</b> — aliases, hot-swap and the six-section model chart.</li>
+        <li><b>Benchmarks</b> — the per-iteration leaderboard + replay-verify (Track B→A migration).</li>
+        <li><b>RAG</b> — GPU-less specialization on your own history.</li>
+        <li><b>Iterative Demo</b> — the v1 → v2 improvement story.</li>
+        <li><b>Agent Loop</b> — the in-app scheduler: hourly sweep, daily audit/improve, history miner, graduation.</li>
+      </ul>
+
+      <h3>Oversight — the loop, measured</h3>
+      <ul>
+        <li><b>Analytics</b> — KPIs, charts and trends folded from the event log.</li>
+        <li><b>Flywheel</b> — fixes learned → reproduced locally → graduated to autonomous.</li>
+        <li><b>Reports</b> — daily audit and weekly review.</li>
+        <li><b>Trust Center</b> — the fence, the tamper-evident audit chain, and the role matrix.</li>
+        <li><b>Documentation</b> — this manual, in-app.</li>
+      </ul>
+
+      <h3>Admin — run the platform</h3>
+      <ul>
+        <li><b>Users &amp; PINs</b> — the roster and role access.</li>
+        <li><b>Clusters</b> — kubeconfig contexts (read-only by default per context).</li>
+        <li><b>Git Sources</b> — the GitOps source registry + sync.</li>
+        <li><b>Settings</b> — model providers, the Telegram bot, the T0 master switch, and demo-configurable integrations (RunPod/SkyPilot burst · BYOK EKS/GKE · Prometheus/Loki/ClickHouse · PII-gated cloud model track).</li>
+        <li><b>Telegram Log</b> — the HITL message mirror.</li>
+      </ul>
+    </section>
+
+    <section id="studio">
+      <h2>The Training Studio</h2>
+      <p>The Finetune tile is a five-step guided studio (role <span class="pill">ml_engineer</span> / <span class="pill">sre_lead</span>) —
+        designed so a newcomer can take a model from "picked" to "chatting with it" without knowing MLX, LoRA flags or GPU sizing.</p>
+      <ol>
+        <li><b>① Model</b> — every trainable MLX model on the box, with size, a fit note ("fast prototyping — ~20s local" … "high quality — minutes"),
+          a recommended badge and its cloud-GPU floor. Fused finetunes appear too, so you can <b>continue training on top of them</b>.</li>
+        <li><b>② Data</b> — the live SRE-history corpus, any saved dataset, or your own upload: JSONL in the common SFT shapes
+          (<span class="mono">messages</span> · prompt/completion · instruction/output · Q&amp;A), a two-column CSV/TSV or XLSX, pair-tag XML,
+          a YAML list, or Q/A markdown. Rows are normalized to chat format and PII-anonymized (a reversible local vault —
+          fix proposals are deanonymized so the applied fix carries the real values); <b>append</b> grows an existing dataset for the next run.
+          See <a href="dataset-formats.html" target="_blank">Data formats</a> — one incident shown in every accepted shape.</li>
+        <li><b>③ Train</b> — alias, iterations, learning rate, batch size and LoRA layers with sensible defaults, plus a compute choice.
+          <b>Nothing launches on the first click:</b> "Estimate &amp; train" returns the cost and wall-clock — local MLX is
+          <span class="mono">$0.00</span>, a RunPod GPU shows its $/hr rate and total — and only the explicit
+          <b>Confirm &amp; start</b> button spends. Cloud GPUs stay greyed out until the Compute integration is switched on in Settings,
+          and a model's GPU floor is enforced so a big model can never land on a too-small card.</li>
+        <li><b>④ Watch</b> — the live loss curve and metrics, persisted on every poll so the curve survives a reload or server restart.
+          Below it, the <b>run history</b>: click any past run to redraw its curve, and once two runs exist a
+          <b>real v1 → v2 overlay</b> shows the improvement. A <b>Retrain +data</b> button sets the fused v1 as the base —
+          v2 genuinely continues from v1's weights.</li>
+        <li><b>⑤ Serve &amp; Chat</b> — a finished run becomes a <em>candidate</em> behind its alias (the Track B→A gate). <b>Promote</b>
+          hot-swaps the alias to the fused weights (or shows the exact one-paste gateway registration if the model isn't served yet),
+          <b>Test</b> asks it a question right there, and <b>Open in Chat</b> hands you over to the full grounded chat.</li>
+      </ol>
+      <div class="callout">The studio also feeds the <b>Iterative Demo</b> tile: once two real runs exist it stops showing the staged
+        story and overlays your actual loss curves. And the whole factory — studio included — runs <b>standalone on its own port</b>
+        (same code, same data), for deployments that only want the fine-tuning product.</div>
+    </section>
+
+    <section id="roles">
+      <h2>Roles &amp; login</h2>
+      <p>Sign in by picking your name and entering a PIN — no email, no password. Six roles gate what you see and
+        what you can do:</p>
+      <table>
+        <thead><tr><th>Role</th><th>Can do</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pill">admin</span></td><td>Everything, plus Users, Clusters and Settings.</td></tr>
+          <tr><td><span class="pill">sre_lead</span></td><td>Approve fixes, execute fenced actions, manage the autonomy policy.</td></tr>
+          <tr><td><span class="pill">operator</span></td><td>Observe, chat, and <em>propose</em> fixes — but cannot approve their own proposal.</td></tr>
+          <tr><td><span class="pill">ml_engineer</span></td><td>The Learn lane — datasets, finetune, models, benchmarks; read-only on the cluster.</td></tr>
+          <tr><td><span class="pill">exec</span></td><td>Read-only oversight — analytics, flywheel, reports, trust.</td></tr>
+          <tr><td><span class="pill">demo</span></td><td>A public read-only subset — overview, topology, analytics, flywheel.</td></tr>
+        </tbody>
+      </table>
+      <div class="callout">The console defaults to a light theme with a working dark toggle (in the sidebar and topbar); your choice persists.</div>
+    </section>
+
+    <section id="logins">
+      <h2>Demo logins</h2>
+      <p>On the demo instance, sign in by picking a name and typing its 4-digit PIN — no email. Each role sees a
+        different slice of the app, so try a few to see the whole product.</p>
+      <table>
+        <thead><tr><th>Name</th><th>Role</th><th>PIN</th><th>What they see</th></tr></thead>
+        <tbody>
+          <tr><td>Asha Verma</td><td><span class="pill">admin</span></td><td><span class="pin">9999</span></td><td>Everything — all lanes + Users, Clusters, Git Sources, Settings.</td></tr>
+          <tr><td>Ravi Iyer</td><td><span class="pill">sre_lead</span></td><td><span class="pin">1111</span></td><td>Approvals, incidents, fenced actions, the autonomy board.</td></tr>
+          <tr><td>Meera Pillai</td><td><span class="pill">operator</span></td><td><span class="pin">2222</span></td><td>Observe, chat, and propose fixes (cannot approve own).</td></tr>
+          <tr><td>Karan Bose</td><td><span class="pill">ml_engineer</span></td><td><span class="pin">3333</span></td><td>The Learn lane — datasets, finetune, models, benchmarks.</td></tr>
+          <tr><td>Divya Rao</td><td><span class="pill">exec</span></td><td><span class="pin">4444</span></td><td>Read-only oversight — analytics, flywheel, reports, trust.</td></tr>
+          <tr><td>Demo Viewer</td><td><span class="pill">demo</span></td><td><span class="pin">0000</span></td><td>A public read-only subset — overview, topology, analytics, flywheel.</td></tr>
+        </tbody>
+      </table>
+      <div class="callout">These are demo credentials for the demo instance only. A real deployment issues per-person
+        PINs (or WorkOS SSO) and the roster is managed under Admin → Users &amp; PINs.</div>
+    </section>
+
+    <section id="lanes">
+      <h2>The six lanes</h2>
+      <ul>
+        <li><b>Observe</b> — Cluster overview (KPIs + health rings), nodes, workloads (tap a pod → its logs, describe and events slide in from the right), topology, cluster events, alerts, telemetry, discovery adapters.</li>
+        <li><b>Converse</b> — Chat grounded in the live cluster + your proven-fix history (pick <span class="mono">k8s-sre</span> or a deep reasoning lane); playbooks; estate-wide search.</li>
+        <li><b>Act</b> — Incidents (a six-section stepper from Signal → Learning), the HITL approval worklist, the fenced action console, the autonomy board, and the predictive engine.</li>
+        <li><b>Learn</b> — History (the event log), the knowledge base of signatures × fixes, the dataset builder, finetune with a live loss curve, the served models (a stepper model-chart), benchmarks, RAG, the iterative-improvement demo, and the agent loop.</li>
+        <li><b>Oversight</b> — The analytics dashboard, the flywheel centerpiece, daily/weekly reports, and the Trust Center.</li>
+        <li><b>Admin</b> — Users &amp; PINs, Clusters (kubeconfig contexts), Settings, and the Telegram log.</li>
+      </ul>
+    </section>
+
+    <section id="loop-walk">
+      <h2>A day in the loop</h2>
+      <ol>
+        <li>A workload starts crash-looping. The <b>agent loop</b> detects it and files an incident with a normalized signature.</li>
+        <li>An <b>operator</b> asks the engineer in chat; the answer is grounded in this cluster's own history ("we've fixed this before — rollout-restart worked 100%").</li>
+        <li>They <b>propose the fix</b>. It lands in the approval queue and, if a bot is configured, on Telegram with ✅ / ❌ buttons.</li>
+        <li>An <b>sre_lead</b> approves (from the app or their phone). The fenced action runs and its outcome is logged to the hash chain.</li>
+        <li>The <b>knowledge base</b> counter increments; the incident feeds the dataset. After a finetune the local model reproduces the fix — and once it's proven, the fix-class can graduate to <b>autonomous</b>.</li>
+      </ol>
+    </section>
+
+    <section id="tech">
+      <h2>Technical architecture</h2>
+      <p>A FastAPI backend serves a vanilla-JS PWA and a versioned <code>/v1</code> JSON API. The three source
+        systems it replaces — an SRE console, an external cron "Hermes" loop, and a Model Factory — collapse into
+        one process with one SQLite database, so the cross-service HTTP hops and file-drops dissolve into direct
+        table reads and an in-app scheduler.</p>
+      <pre>Browser (PIN + role)
+  → FastAPI :9040  ── static PWA + /v1 JSON
+      ├─ cluster.py   read-only kubectl (kubeconfig-pluggable)
+      ├─ chat.py      → Switchboard model gateway + deep-reasoning lane
+      ├─ events.py    append-only SHA-256 hash-chained event log  (the corpus)
+      ├─ actions.py   THE mutation chokepoint — the fence (no delete path)
+      ├─ agentloop.py in-app scheduler (sweep · audit · improve · miner · graduation)
+      ├─ policy.py    T0/T1/T2 tiers + graduation gates + circuit breaker
+      └─ factory/     data → MLX finetune → stable /v1 alias  (embedded + standalone :9041)</pre>
+    </section>
+
+    <section id="fence">
+      <h2>The safety fence</h2>
+      <p>Every mutation goes through one chokepoint (<code>actions.py</code>) with structural guarantees:</p>
+      <ul>
+        <li><b>Allowed kinds:</b> <code>deployment</code>, <code>statefulset</code>, <code>daemonset</code> — nothing else can be mutated.</li>
+        <li><b>Replica clamp:</b> <code>MAX_SCALE_REPLICAS = 20</code>, always applied.</li>
+        <li><b>No delete route exists</b> — there is no code path to delete a workload, PVC, or namespace. T2 (never-auto) is structural, not a list.</li>
+        <li><b>Tiers:</b> T0 auto (proven idempotent fixes only, off by default), T1 human-in-the-loop (default), T2 never-auto. A circuit breaker demotes a flapping auto-fix back to human review.</li>
+      </ul>
+    </section>
+
+    <section id="schemas">
+      <h2>Data model (the heart)</h2>
+      <table>
+        <thead><tr><th>Table</th><th>What it holds</th></tr></thead>
+        <tbody>
+          <tr><td><code>event</code></td><td>The append-only, per-cluster hash-chained log: every observation, proposal, approval, action, outcome, report, chat, train and serve. This IS the training corpus.</td></tr>
+          <tr><td><code>kb_fix</code></td><td>Signature × fix × outcome with counters, the shadow→autonomous status, the cloud/local track, and the <code>local_model_verified</code> flag (the Track B→A migration test).</td></tr>
+          <tr><td><code>approval</code></td><td>The HITL queue — one row, two faces (the app and Telegram).</td></tr>
+          <tr><td><code>job</code></td><td>Agent-loop run state, persisted so a restart never orphans a job.</td></tr>
+          <tr><td><code>cluster_ctx</code></td><td>Registered kubeconfig contexts and their read-only / read-write mode.</td></tr>
+        </tbody>
+      </table>
+      <p><b>The issue-signature</b> (<code>kind:reason:owner</code>, replica-hashes stripped) is the cross-surface
+        ID — the trigger key for autonomy, the knowledge-base key, and the dataset grouping key all at once.</p>
+    </section>
+
+    <section id="deploy">
+      <h2>Deployment</h2>
+      <p><b>On-prem (PM2):</b></p>
+      <pre>uv venv .venv &amp;&amp; uv pip install -r requirements.txt --python .venv/bin/python
+pm2 start ecosystem.config.js       # vke on :9040
+pm2 save</pre>
+      <p><b>Cloud twin (Docker):</b> the self-contained Demo 2 stack (app + AI gateway, cloud models, synthetic cluster — see <a href="#demos">Two demo lanes</a>):</p>
+      <pre>cp deploy/twin/.env.example deploy/twin/.env   # set CMD_API_KEY
+docker compose -f deploy/twin/docker-compose.yml up -d --build</pre>
+      <table>
+        <thead><tr><th>Env</th><th>Default</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>VKE_SWITCHBOARD</code></td><td>:8000</td><td>model gateway (chat + consensus verify)</td></tr>
+          <tr><td><code>VKE_FOUNDRY</code></td><td>:9003</td><td>finetune control plane (MLX path)</td></tr>
+          <tr><td><code>VKE_TELEGRAM_TOKEN</code> / <code>_CHAT</code></td><td>—</td><td>a <b>fresh</b> VKE bot for HITL approvals</td></tr>
+        </tbody>
+      </table>
+      <p>Tailnet-only by default. Public exposure goes through a reverse proxy + edge front, operator-gated.</p>
+    </section>
+
+    <section id="demos">
+      <h2>Two demo lanes</h2>
+      <p><b>One codebase, two ways to try it</b> — the client chooses. Both run the identical VKE app; they
+        differ only in <i>where the AI runs</i> and <i>whether the cluster is live</i>. Both are live now:</p>
+      <table>
+        <thead><tr><th></th><th>Demo 1 — on-prem</th><th>Demo 2 — cloud twin</th></tr></thead>
+        <tbody>
+          <tr><td><b>URL</b></td><td><a href="https://vkeapp.dkube.app">vkeapp.dkube.app</a></td><td><a href="https://vkecloud.dkube.app">vkecloud.dkube.app</a></td></tr>
+          <tr><td><b>AI</b></td><td>local models via Switchboard (an 11-model fleet) + the <code>claude</code> CLI deep lane — <b>zero egress</b></td><td>frontier <b>cloud</b> models via a keyless Command&nbsp;Code gateway (PII-gated, Anthropic denied) — <b>no GPU, no local model</b></td></tr>
+          <tr><td><b>Cluster</b></td><td><b>live</b> Colima k3s (kubeconfig-pluggable → your EKS/GKE)</td><td><b>synthetic</b> — replays a captured k3s snapshot (<code>data/cluster-fixtures/</code>), no cluster needed</td></tr>
+          <tr><td><b>Chat default</b></td><td><code>k8s-sre</code> → mistral-24b (+ deep·claude)</td><td><code>k8s-sre</code> → deepseek-v4-flash (+ gemini/GLM/…)</td></tr>
+          <tr><td><b>Runs on</b></td><td>the on-prem box (PM2 <code>:9040</code>)</td><td>Docker (<code>deploy/twin</code>, <code>:9060</code>) — VPS-portable</td></tr>
+          <tr><td><b>The pitch</b></td><td>your data + your AI stay on your hardware</td><td>no hardware to buy — up 24×7 on a small VPS</td></tr>
+        </tbody>
+      </table>
+      <p>The twin needs no changes to the app — three env knobs flip the same codebase into "cloud mode":</p>
+      <table>
+        <thead><tr><th>Env</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td><code>VKE_TWIN=1</code></td><td>points chat + the <code>k8s-sre</code> alias at the cloud model; turns the deep·claude lane off (no CLI in the container)</td></tr>
+          <tr><td><code>VKE_CLUSTER_MODE=demo</code></td><td>every Observe/Act surface reads the fixture snapshot instead of a live cluster</td></tr>
+          <tr><td><code>VKE_SWITCHBOARD=http://aigw:8000</code></td><td>the AI gateway that holds <code>CMD_API_KEY</code> (so VKE itself stays keyless)</td></tr>
+        </tbody>
+      </table>
+      <p><b>How the public URLs work</b> (the house pattern): each <code>*.dkube.app</code> is a thin Vercel front
+        that rewrites every path to a Tailscale funnel, where one Caddy strips an internal path prefix and routes
+        to the right app port — <code>vkeapp</code> → <code>/__vke/</code> → :9040, <code>vkecloud</code> →
+        <code>/__vkecloud/</code> → :9060. For the live demo both lanes run on the same box behind the funnel;
+        the twin stays fully VPS-portable (<code>deploy/twin/DEPLOY.md</code>) — relocating it is just moving the
+        Vercel rewrite target.</p>
+    </section>
+
+    <section id="api">
+      <h2>API reference</h2>
+      <p>All endpoints are under <code>/v1</code>, bearer-token authenticated, role-gated at the edge. A selection:</p>
+      <table>
+        <thead><tr><th>Endpoint</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>POST /v1/login</code></td><td>PIN login → bearer token</td></tr>
+          <tr><td><code>GET /v1/cluster/{overview,nodes,workloads,pods,events,topology,logs,describe}</code></td><td>read-only cluster state</td></tr>
+          <tr><td><code>POST /v1/chat/stream</code></td><td>SSE chat, grounded in cluster + KB</td></tr>
+          <tr><td><code>GET /v1/events</code> · <code>/v1/events/verify</code></td><td>the event log + tamper-evident chain verification</td></tr>
+          <tr><td><code>POST /v1/propose</code> · <code>/v1/approvals/{id}/decide</code></td><td>the HITL flow</td></tr>
+          <tr><td><code>POST /v1/actions/execute</code></td><td>a fenced mutation (validated + logged)</td></tr>
+          <tr><td><code>GET /v1/kb</code> · <code>/v1/autonomy</code> · <code>/v1/flywheel</code></td><td>the learning loop, measured</td></tr>
+          <tr><td><code>GET /v1/finetune/bases</code> · <code>POST /v1/datasets/upload</code></td><td>the studio's model picker + bring-your-own-data</td></tr>
+          <tr><td><code>POST /v1/finetune/launch</code></td><td>the two-call spend handshake: estimate first, launch only with <code>confirm:true</code></td></tr>
+          <tr><td><code>GET /v1/finetune/{status,last,runs}</code></td><td>live loss · restart-restore · the run history</td></tr>
+          <tr><td><code>POST /v1/serve/{promote,test}</code> · <code>GET /v1/models</code></td><td>candidate → alias hot-swap · test-in-place</td></tr>
+        </tbody>
+      </table>
+      <div class="callout">A versioned <code>/v2/events</code> read API + webhooks are on the roadmap for external integration; today the API is the app's own contract.</div>
+    </section>
+  </main>
+</div>
+</body>
+</html>
