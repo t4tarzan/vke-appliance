@@ -75,6 +75,33 @@
       <p>Same product, same Training Studio, same update channel — pick the shape that fits the machine
         in front of you. Every install is equally easy to remove.</p>
 
+      <h3>Which install for which machine</h3>
+      <p>All container images and the Helm chart are <b>multi-architecture (amd64 + arm64) from the same
+        tag</b> — Docker and Kubernetes pick the right build automatically; there is nothing
+        architecture-specific to type.</p>
+      <table>
+        <tr><th>Your machine</th><th>Use</th><th>Note</th></tr>
+        <tr><td>Mac — Apple silicon (M-series)</td><td><b>1 · Native macOS</b></td>
+          <td>Metal-speed MLX serving + ~15s real finetunes; no Docker needed. (The appliance also runs
+            under Docker Desktop / colima if you prefer containers.)</td></tr>
+        <tr><td>Mac — Intel</td><td><b>2 · Appliance</b></td>
+          <td>The native shape is Apple-silicon-only (MLX); Intel Macs run the appliance under
+            Docker Desktop.</td></tr>
+        <tr><td>Linux server / VPS — x86-64 (amd64)</td><td><b>2 · Appliance</b></td>
+          <td>Docker Engine + Compose v2 (see the requirement below). CPU is enough — models and a real
+            CPU trainer are bundled.</td></tr>
+        <tr><td>Linux — ARM64 (DGX Spark / Grace, Ampere, Graviton…)</td><td><b>2 · Appliance</b></td>
+          <td>Same compose file, same tags — the arm64 build is pulled automatically. On CUDA hosts,
+            point <span class="pin">VKE_SWITCHBOARD</span> at the host's own Ollama/gateway for
+            GPU-served models.</td></tr>
+        <tr><td>Any Kubernetes cluster (x86 or ARM nodes, mixed is fine)</td><td><b>3 · In-cluster</b></td>
+          <td>One <span class="pin">helm install</span> from the public OCI chart; read-only by RBAC
+            until you grant more.</td></tr>
+        <tr><td>Fully air-gapped site (zero internet)</td><td><b>Signed offline bundle</b></td>
+          <td>Everything — images with models inside, compose, chart, docs, update channel — in one
+            signed artifact that travels on a disk (see shape 2).</td></tr>
+      </table>
+
       <h3>1 · Native macOS — Apple silicon, MLX, no Docker</h3>
       <p>The fastest experience: Metal-speed model serving and real MLX LoRA finetunes in ~15 seconds.
         Installs into <span class="pin">~/.vke</span> with a single launch agent — no sudo, no Docker.</p>
@@ -87,16 +114,30 @@
 
       <h3>2 · Appliance — docker compose, everything bundled</h3>
       <p>Three images carry the app, the AI models and a real CPU trainer — fully offline after the pull,
-        which makes this the shape for air-gapped sites and any machine with Docker (Mac, DGX, Linux).</p>
+        which makes this the shape for air-gapped sites and any machine with Docker (Mac, DGX, Linux —
+        amd64 and arm64 alike, from the same tags).</p>
+      <p><b>Requirement: Docker Compose v2</b> (the <span class="pin">docker compose</span> plugin —
+        check with <span class="pin">docker compose version</span>). The legacy Python
+        <span class="pin">docker-compose</span> v1 fails on current images with
+        <span class="pin">KeyError: 'ContainerConfig'</span>. If your distro only ships v1, install the
+        plugin binary directly (no apt needed):</p>
+      <pre>sudo mkdir -p /usr/local/lib/docker/cli-plugins
+sudo curl -fsSL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m) \
+  -o /usr/local/lib/docker/cli-plugins/docker-compose
+sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose</pre>
       <pre>curl -O https://raw.githubusercontent.com/t4tarzan/vke-appliance/main/docker-compose.yml
 docker compose up -d
 open http://localhost:9040</pre>
+      <p>Custom bind/port: <span class="pin">VKE_PORT=127.0.0.1:9062 docker compose up -d</span>
+        (loopback-only, e.g. behind your own nginx) or <span class="pin">VKE_PORT=8080</span> for a
+        plain port change. The first pull is ~13GB (the AI models travel inside the images) — allow
+        ~20GB of free disk; after that the appliance runs with no internet at all.</p>
       <p>Attach your real environment by uncommenting one line in the compose file —
         <span class="pin">~/.kube:/root/.kube:ro</span> to observe your cluster, or the docker socket to
         list the host's containers (then Settings → Clusters → Discover). The bundled watchtower makes
         Settings → Updates a true in-place update. <span class="pin">docker compose down -v</span> is a
         factory reset; without <span class="pin">-v</span> your data and trained models survive restarts.</p>
-      <p><b>Fully air-gapped sites (zero internet, ever):</b> VKE 1.3.0 ships as a <b>signed offline
+      <p><b>Fully air-gapped sites (zero internet, ever):</b> every VKE release ships as a <b>signed offline
         bundle</b> — every image (models inside), the compose, the Helm chart, the docs and a local
         update channel in one artifact that travels on a disk. On the offline host:
         <span class="pin">./verify.sh</span> (checks every byte against a cryptographically signed
@@ -111,7 +152,7 @@ open http://localhost:9040</pre>
         ServiceAccount — read-only by RBAC until you grant more.</p>
       <p>The chart is published as a <b>public OCI package</b> — no repo clone, no credentials,
         works on x86 and ARM clusters alike (all images are multi-arch):</p>
-      <pre>helm install vke oci://ghcr.io/t4tarzan/charts/vke --version 1.3.0 \
+      <pre>helm install vke oci://ghcr.io/t4tarzan/charts/vke --version 1.5.0 \
   --namespace vke --create-namespace \
   --set ai.baseUrl=http://&lt;your-ollama-or-gateway&gt;:11434 \
   --set ai.model=qwen2.5:7b</pre>
