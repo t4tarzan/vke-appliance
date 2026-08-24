@@ -1,4 +1,21 @@
 # VKE — Changelog
+## 1.6.0 · 2026-08-24
+
+- **The two lines merge.** This release joins the `t4tarzan` trunk (the air-gap arc 1.3.0,
+  the everything-clickable enhancement release 1.4.0, and the Learn-mode flywheel 1.5.0)
+  with the DKubeX line that ran from 1.3.0-dkubex through 1.3.8. Both histories are kept
+  below; nothing was dropped. The version is above both so no install can be confused about
+  which is newer.
+- **What the DKubeX line brings** (detailed in the 1.3.x entries below): Postgres support
+  and base-path routing for the platform; SecureLLM's internal `x-token` service-to-service
+  auth with every gateway call authenticated, not just chat; gateway endpoints that are live
+  and switchable from Settings instead of captured at import; the model hub, which pulls
+  models from an OCI registry into the bundled Ollama for sites that cannot reach Hugging
+  Face; a trained alias that no longer reports another model's backing; and readable gateway
+  errors in place of a bare `KeyError`.
+- **Kept from the trunk on merge**: the pooled upstream client and off-loop request
+  preparation in `/api/v1`, the served-registry read cache, alias version/promote stamps,
+  incident-context chat events, and the new test suite.
 
 ## 1.5.0 · 2026-08-24
 - **Known fixes come first**: when an alert fires on a problem this cluster has already fixed
@@ -72,6 +89,194 @@
   `podman pull ghcr.io/t4tarzan/vke-trainer:latest` again — no other change needed.**
   (Multi-arch tags are now stitched with `buildx imagetools` so this class of mismatch is
   caught at release time.)
+
+## 1.3.8 · 2026-08-24
+- **Settings page loads again.** 1.3.7 shipped the Models card declared ABOVE the `row()`
+  helper it calls. Template literals evaluate eagerly and `const` is not hoisted, so
+  rendering hit `row` in its temporal dead zone: `ReferenceError: Cannot access 'row'
+  before initialization` aborted `screenSettings()` and the page came up blank while every
+  other page was fine. `node --check` cannot catch this — it is a runtime error in valid
+  syntax — so `bin/render-settings-check.js` now executes the screen against stubs and
+  asserts the cards render. It fails on 1.3.7 and passes here.
+
+## 1.3.7 · 2026-08-24
+
+- **Pull models from an OCI registry after deployment (Settings -> Models).** The bundled
+  ollama image carries only two small qwen models, and a sealed site cannot reach Hugging
+  Face -- but it can usually reach a registry. Discover what is available, pull with live
+  progress, and the model becomes a real Ollama model that appears in the Converse
+  dropdown. Weights stream registry -> Ollama, so nothing is staged on disk in transit;
+  only the final copy in the ollama store costs space. Needs no `oras` and no ollama CLI.
+- **The registry is configurable, and switchable at runtime.** `modelHub.registry` in
+  values, editable on the Settings page like the gateway fields, so a site can retarget
+  to an intranet mirror without a rollout. The private-package PAT stays Secret-backed --
+  the settings payload reaches a browser, so it reports only whether one is configured.
+- **Discovery reads a catalogue artifact, because a registry cannot be listed.** GHCR
+  answers 403 to `/v2/_catalog`, and the GitHub Packages API needs egress a sealed site
+  does not have. `bin/ollama-ghcr.sh index` runs where there IS internet, enumerates the
+  namespace, keeps only real ollama model artifacts, and publishes the catalogue beside
+  the models. It warns when the result is not readable anonymously -- a new GHCR package
+  is private by default and there is no API to change container visibility.
+- **A container image can no longer be mistaken for a model.** Registry namespaces hold
+  both, and a plain image has no `artifactType`, so it slipped a too-tolerant guard and
+  the largest-layer fallback selected a 3GB docker tarball as if it were weights. A
+  missing `artifactType` is now accepted only alongside a real weight layer.
+
+## 1.3.6 · 2026-08-24
+
+- **The gateway auth default now matches the gateway URL.** 1.3.5 seeded the new "Chat
+  gateway auth" setting from a fallback that assumed `bearer`, so a fresh install showed
+  `bearer — Authorization: Bearer` directly above a bundled-Ollama URL that needs no auth —
+  contradicting the field's own "must match the URL above" hint. The scheme is derived from
+  the deployment now: no key injected means `none`, a key means `bearer`, and
+  `securellm.internal` means `k8s-sa`. Behaviour is unchanged either way (bearer with an
+  empty key already sent no header), but the value shown is true. Installs carrying the
+  wrong seeded `bearer` are repaired on boot; any deliberate choice — including `bearer`
+  with a real key — is left untouched.
+
+## 1.3.5 · 2026-08-24
+
+- **The Settings page's gateway fields actually work now.** "Switchboard URL" and "Foundry
+  URL" have always been on the Settings page and have always saved — but nothing read them:
+  `chat.py` and `factory/train.py` each captured `VKE_SWITCHBOARD` / `VKE_FOUNDRY` into a
+  module constant at import, so an edit changed a value no code ever consulted. Both are
+  resolved per request now (`backend/llm_auth.py`), Settings winning over the env, so you
+  can move chat between the bundled Ollama, SecureLLM and any other OpenAI-compatible
+  endpoint from the UI with no rollout.
+- **Auth is switchable with the URL.** A URL change alone is not enough: in-cluster
+  SecureLLM rejects `Authorization: Bearer` with 401 while Ollama wants no header at all. A
+  new "Chat gateway auth" selector picks `none` · `bearer` · `k8s-sa` and takes effect on the
+  next request. Verified live — flipping to `bearer` against SecureLLM makes its model
+  vanish from the dropdown, flipping back restores it.
+- **Settings no longer displays a fiction.** Those fields were seeded to `127.0.0.1:8000` /
+  `:9003` and shown unchanged on every in-cluster install. On boot VKE now adopts the
+  endpoints the deployment actually injected — but only when the stored value is still that
+  untouched seed default, so an operator's own edit is never overwritten. Without that
+  guard, honouring the setting would have repointed every existing install at localhost.
+- **The finetune endpoint is live too**, so the Foundry URL can move without a redeploy.
+
+## 1.3.4 · 2026-08-24
+
+- **SecureLLM internal service-to-service auth (dkubeio/vke#1).** In-cluster SecureLLM does
+  not accept `Authorization: Bearer` — it wants the caller's ServiceAccount token in
+  `x-token` plus `x-requested-user`. Verified against a live SecureLLM: `x-token` → 200,
+  Bearer with the same token → 401, no auth → 401. Enable with
+  `--set securellm.internal=true`; unset keeps the Bearer behaviour exactly as before.
+  The SA token is re-read on every request because the kubelet rotates it — a value cached
+  at import works right after a rollout and then 401s for the rest of the pod's life.
+- **Every gateway call now authenticates, not just chat.** Outbound auth moved into one
+  module (`backend/llm_auth.py`). `gateway.py`'s four upstream calls (streaming and
+  non-streaming completions, embeddings, the retry path), `factory/serve.py`'s promote
+  probe, `factory/bench.py`'s scoring and `factory/rag2.py`'s embeddings all sent NO auth
+  header, so against any authenticated gateway they simply failed.
+- **A gateway error is readable now.** Any upstream rejection collapsed into
+  `gateway: 'choices'` — a bare `KeyError` from indexing an error body — which is what the
+  Studio showed when Test was pressed. You get `gateway 400: model is required` instead.
+- **Chat no longer answers with silence on a gateway error.** `stream()` only forwarded
+  lines starting with `data:`, so a non-200 error body matched nothing and the turn ended
+  empty. It now surfaces the status and message.
+- **Test on an unpromoted alias says what to do.** A recorded candidate does not back the
+  alias (the Track B→A gate), so Test dispatched `model: null`. It now reads "press Promote
+  to serve the candidate (<name>)" instead of failing obscurely.
+- **Forge jobs record a base path that exists.** `MODELS_DIR` was hardcoded to
+  `~/hub2/models`, so in-container it wrote `base = "/root/hub2/models/<name>"` into the
+  job config — a directory present nowhere in the pod. It survived only because
+  `train_lora.py` takes `basename()` and re-resolves. Now honours `VKE_MODELS_DIR`, which
+  the chart points at `models.basesPath`.
+
+## 1.3.3.1 · 2026-08-24
+- **Chart 0.2.2 pins `image.tag`** to an immutable release tag instead of `latest`.
+  `latest` is mutable while `pullPolicy` is `IfNotPresent`, so a node that had already
+  cached an older `latest` never re-pulled it and silently kept serving the old app
+  through installs and restarts — and the DKubeX app store cannot pass
+  `--set image.pullPolicy=Always`, so the tag itself has to move each release.
+
+## 1.3.3 · 2026-08-24
+
+- **A freshly-trained alias no longer reports someone else's model.** `record_candidate()`
+  created a new alias by copying `k8s-sre`'s config, so `train1` came up claiming
+  `backing mistral-small-24b` on the **cloud** track — a model that alias never had, and
+  a track it was never trained on. New aliases now start with no live backing (nothing
+  backs them until the candidate is PROMOTED — the Track B→A gate) on the local track.
+  The same shallow copy also shared `DEFAULT_SERVED`'s `history` list, so alias history
+  leaked into the module default and into every alias created afterwards.
+- **`Set default` actually moves the chat default now.** The button wrote the
+  `chat_default_model` config key while the §5 "chat default" pill compared against
+  `served.json["default"]`, so clicking it could never change what you saw. Both
+  `/v1/serve/set-default` routes now also move the served-registry default when the
+  target is an alias.
+- **The Training Studio stops describing a Mac.** In-cluster there is no MLX and no
+  `~/hub2`: Compute read "Local MLX — free", §1 claimed "Every MLX model on this box",
+  and a finished run pointed at `~/hub2/models/<job>` — a path that does not exist in the
+  container. The fused model is imported into Ollama; the trainer's own log said
+  `/models/<job>`, which is never written either. All four now tell the truth.
+- **Candidate recording no longer hangs off a wrong path.** `status_flow()` detected a
+  finished fuse with `"/models/" in log and "fused model" in log`, so correcting that log
+  line would have silently stopped candidates being recorded and made Promote vanish. The
+  detector now keys on `"fused model"` alone and matches old and new trainer images alike.
+- **Chart: one volume for the models claim, so installs stop logging a scheduling
+  failure.** `<release>-models` was declared TWICE in the pod (as `forge` and `models`,
+  the same claim). Naming one PVC twice makes the scheduler's VolumeBinding PreBind patch
+  it twice in a single pass; the second write carries a superseded resourceVersion, so
+  every install logged `FailedScheduling ... "vke-models": the object has been modified`
+  before retrying. One volume, several subPaths — every mountPath unchanged, no migration.
+- **Chart: the AI model matches the AI endpoint.** `ai.baseUrl` moved to the bundled
+  in-pod Ollama but `ai.model`/`ai.track` still said `dkubex/qwen3-6-27b` / `cloud` — a
+  model that endpoint has never served. Since `_twin_defaults()` injects `ai.model` as
+  both `chat_default_model` and the `k8s-sre` binding, the default chat model and the
+  alias both answered nothing. Now `qwen2.5:1.5b` / `local`.
+- **Chart: `ollama.tag` pinned to 1.2.2** rather than the mutable `latest`, so a
+  reinstall can't silently land on a different model set.
+
+## 1.3.2 · 2026-08-23
+- **Chat works again, and trained models actually answer.** Two bugs, both making chat
+  return an empty `…`. `ai.baseUrl` ended in `/v1` while `chat.py` appends its own, so
+  every request went to `/openai/v1/v1/...` and 404'd — silently, because the model list
+  swallows the error and falls back to showing only the factory aliases. And
+  `serve.promote()` looked for the freshly-trained model on the chat gateway, when
+  `ollama create` had imported it into the bundled in-pod Ollama; the alias never got
+  repointed. promote() now finds it there and records a per-alias endpoint, which
+  `chat._route()` already honours, so a promoted finetune is served by the bundled
+  Ollama while general chat stays on your gateway.
+
+## 1.3.1 · 2026-08-23
+- **Postgres boot fix**: with `postgres.db_url` set, `init()` crashed before the app came
+  up — `psycopg.errors.SyntaxError: syntax error at end of input`. Two causes, both now
+  fixed. The script splitter only stripped WHOLE-LINE `--` comments, so the semicolon in
+  `rag_chunk`'s trailing comment (`-- float32 le; source of truth`) split that CREATE
+  TABLE mid-comment and handed Postgres an unterminated statement; it now strips `--` to
+  end-of-line and ignores both comments and semicolons inside quoted literals. And
+  `_pg_ddl` had no mapping for SQLite's `BLOB`, which Postgres has no type for, so
+  `rag_chunk.embedding` failed with `type "blob" does not exist` and every later
+  statement against that table cascaded; it now becomes `BYTEA`.
+  Verified against a real PostgreSQL 15: all 25 statements apply, 20 tables created,
+  `init()` completes, and a float32 `bytes` value round-trips through the embedding
+  column. SQLite installs were never affected — `sqlite3.executescript` parses comments
+  itself, which is why this only showed up on DKubeX.
+
+## 1.3.0-dkubex · 2026-08-23   (the DKubeX line; renumbered on merge — t4tarzan shipped a different 1.3.0, below)
+- **The appliance triple, in your cluster**: the Helm chart's pod now runs `vke` +
+  `vke-trainer` + `vke-ollama` together, the same self-contained shape docker-compose has
+  always had. `ollama.enabled` and `trainer.enabled` both default ON — the published images
+  are multi-arch (linux/amd64 + linux/arm64) now, so the old arm64-only caveat is gone.
+- **Training actually finishes in-cluster**: the trainer's `OLLAMA_HOST` pointed at
+  `ai.baseUrl`, an OpenAI-compatible `/v1` gateway the `ollama create` CLI cannot talk to,
+  so every in-cluster run died at the final import step. It now points at the bundled
+  server in the pod. Chat is untouched and still uses `ai.baseUrl`.
+- **Models and training scratch survive a restart**: one shared `<release>-models` volume
+  (30Gi default) holds the trainer's base weights, the ollama model store and the forge
+  scratch, in `bases/` · `ollama/` · `forge/` subpaths. `/forge` was an emptyDir, which put
+  multi-GB merges on node ephemeral storage and could get the whole pod evicted mid-train.
+  The vLLM tier shares the same volume, so a base seeded once serves every tier.
+- **Baked models are seeded, not masked**: mounting a volume over a baked model directory
+  makes it start EMPTY — a Docker named volume seeds itself from the image, a k8s volume
+  never does. Two initContainers copy the baked ollama store and the ~9GB of HF bases onto
+  the volume on first start, and fail loudly rather than booting an empty chat. This is the
+  "bundle installer" the vLLM values comment always referred to. First start takes several
+  minutes; `progressDeadlineSeconds` and the chart timeout were raised to match.
+- App storage (`storage.size`, 1Gi) is deliberately unchanged: a bound PVC only resizes on a
+  StorageClass with `allowVolumeExpansion`, so growing it would break `helm upgrade`.
+  Chart 0.2.0.
 
 ## 1.2.0 · 2026-08-21
 - **A real base-model catalog**: Llama 3.2 1B, Gemma 3 1B, SmolLM2 1.7B and Mistral 7B join

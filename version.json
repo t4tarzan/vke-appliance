@@ -1,9 +1,9 @@
 {
-  "version": "1.5.0",
+  "version": "1.6.0",
   "date": "2026-08-24",
   "highlights": [
-    "Known fixes come first",
-    "Nightly auto-retrain from the logs (opt-in)",
-    "A worked, verified fine-tuning walkthrough"
+    "The two lines merge.",
+    "What the DKubeX line brings",
+    "Kept from the trunk on merge"
   ]
 }
