@@ -1,5 +1,30 @@
 # VKE — Changelog
 
+## 1.4.0 · 2026-08-24
+- **Verified sealed, again**: the whole air-gap edition re-proven from scratch — sealed acceptance
+  walk green three times (including against this release's own image), a packet capture showing zero
+  egress from the sealed network, a 42-screen browser walk with zero errors, and 43 new automated
+  tests covering the gateway, API keys, workspaces, knowledge search and the tamper-evident history.
+- **Everything is clickable**: every record on every screen opens a right-side detail drawer —
+  history rows show their chain-verified receipt, learned fixes show their full track record, models
+  open a live model card (training lineage, dataset + privacy stats, promote history), datasets show
+  sample rows and their schema.
+- **Incidents tell their whole story**: the six-section incident walk (Signal → Learning) now
+  populates end to end — fixes, approvals, actions, outcomes and retraining are correlated to the
+  incident, older incidents included; duplicate cluster events collapse behind count badges; a
+  "Diagnose in chat" handoff records the conversation on the incident's trail.
+- **Model provenance in chat**: the model picker shows a trained model's version and promote date
+  ("k8s-sre · v3 · Aug 24"), with a one-click model card.
+- **Robust Settings**: an air-gap status card (and whether the seal comes from the environment or a
+  setting), every status pill opens a detail drawer, and invalid values are blocked with the reason
+  shown instead of silently saved.
+- **A real network instrument under Discover**: node network identity, CNI detection, cluster-DNS
+  health, API-server latency percentiles, services with no endpoints behind them, an outage rollup
+  from the cluster's own events, and an opt-in read-only throughput estimate — every probe
+  intranet-only.
+- **Durability fixes**: the event hash chain can no longer fork under concurrent writes; receipts
+  are workspace-scoped; failed API calls keep their receipt link.
+
 ## 1.3.0 · 2026-08-23
 - **Air-gap edition (the vke-airgap arc, complete)**: the platform now runs with ZERO internet,
   forever — one master seal (`VKE_AIRGAP=1`) turns off every egress class, proven with a network
