@@ -1,5 +1,20 @@
 # VKE — Changelog
 
+## 1.5.0 · 2026-08-24
+- **Known fixes come first**: when an alert fires on a problem this cluster has already fixed
+  successfully, the hourly sweep now proposes that PROVEN fix straight into the Approvals queue —
+  before any model suggestion. One pending proposal per problem signature; nothing executes without
+  a human approval; graduated fixes still auto-apply under T0. Toggle: Settings → "Known fixes first".
+- **Nightly auto-retrain from the logs (opt-in)**: the platform's own event log is its training
+  corpus — with the new Settings toggle on, a nightly job retrains the k8s-sre model whenever the
+  corpus has grown by ten or more rows. The result is a CANDIDATE only: the evaluation gate and the
+  human promote step stay exactly as they were. Off by default.
+- **A worked, verified fine-tuning walkthrough** (docs/USECASE-append-retrain.md): upload a small
+  case dataset, train, append more facts, retrain FROM the fused first version — the starting loss
+  drops (the weights carry over), validation improves, and the model answers every taught fact
+  verbatim while honestly failing what it was never taught. The Iterative Demo tile now shows this
+  real before/after pair.
+
 ## 1.4.0 · 2026-08-24
 - **Verified sealed, again**: the whole air-gap edition re-proven from scratch — sealed acceptance
   walk green three times (including against this release's own image), a packet capture showing zero
