@@ -1,9 +1,12 @@
 {
-  "version": "1.6.0",
-  "date": "2026-08-24",
+  "version": "1.6.4",
+  "date": "2026-08-26",
   "highlights": [
-    "The two lines merge.",
-    "What the DKubeX line brings",
-    "Kept from the trunk on merge"
+    "A finetune is imported as base + adapter, not a full copy of the model.",
+    "The chat alias binds to a model the gateway actually serves.",
+    "Point at an ollama you already run",
+    "Training estimates tell the truth on a GPU.",
+    "The memory gate refitted against a second model.",
+    "Eviction and payload hardening."
   ]
 }

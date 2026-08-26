@@ -1,4 +1,149 @@
 # VKE — Changelog
+
+## 1.6.4 · 2026-08-25
+
+- **A finetune is imported as base + adapter, not a full copy of the model.** Every alias used
+  to be a merged 948MB copy for Qwen-0.5B, so ten aliases meant 9.5GB and every retrain
+  orphaned another 948MB — which is what actually filled the models volume. The adapter that
+  produces the finetune is 4.1MB, and ollama can serve `FROM <base>` + `ADAPTER <lora.gguf>`,
+  so the base is imported ONCE under a shared name and each alias is the adapter on top.
+  Verified by reading the blob store directly: the alias and the base reference the *same*
+  948.10MB blob and the alias adds exactly one 4.14MB blob. Ten aliases go from 9,480MB to
+  988MB, and a retrain now orphans 4MB. It also skips the merge entirely, removing the merge
+  memory spike and ~6 bytes/param of scratch. `VKE_IMPORT_MODE=merged` restores the old path,
+  and any failure falls back to it automatically.
+- **The chat alias binds to a model the gateway actually serves.** A reinstall is asymmetric:
+  Settings live in Postgres and survive, `served.json` lives on the PVC and does not. So a
+  fresh install re-seeded a hardcoded model name that had nothing to do with whichever gateway
+  the surviving Settings pointed at — a 404 on the very first message, on an install that
+  looked healthy. Seeding now asks the gateway what it serves. An unreachable gateway keeps
+  the old behaviour exactly.
+- **Point at an ollama you already run** (`ollama.externalUrl`). Chat never needed the in-pod
+  ollama, but three things need the ollama API specifically rather than merely an
+  OpenAI-compatible one: the trainer's import, the Settings→Models registry pulls, and alias
+  promotion. Previously `VKE_OLLAMA` was simply unset when `ollama.enabled=false` and the
+  trainer fell back to `ai.baseUrl`, conflating the chat gateway with an ollama server root —
+  so the shape worked only when they happened to be the same host.
+- **Training estimates tell the truth on a GPU.** `/health` reports the trainer's device, so
+  the Studio stops labelling a GPU run "Local — free" with a CPU wall-clock. Measured, that
+  gap is 33.5s against 367.6s for the same 60 iterations.
+- **The memory gate refitted against a second model.** Fitted on Qwen-0.5B alone it ran up to
+  2.2 GiB conservative on Llama-3.2-1B — a deliberately different shape (16 wide layers against
+  24 narrow) — which on a small card refuses runs that would fit. Refitted across seven points
+  spanning both models; still over-predicts every one, but the margin narrows to 0.12–1.43 GiB.
+- **Eviction and payload hardening.** The trainer's memory request goes 1Gi → 3Gi: requests are
+  what the kubelet ranks evictions by, and a trainer holding 5Gi against a 1Gi request is the
+  first thing evicted under node pressure — surfacing as `Evicted`, which no in-container gate
+  can prevent. The inline job payload is bounded at 32MB, since an uploaded dataset has no
+  natural bound and a co-located trainer reads the shared claim anyway.
+- **The app store advertised roughly half the storage VKE claims** — 31Gi against an actual
+  61Gi. Corrected, along with the memory recommendation.
+
+
+## 1.6.3 · 2026-08-25
+
+- **Training can actually use a GPU.** `train_lora.py` had no device handling at all — no
+  `.to(device)`, no `device_map` — so on a GPU node it trained on the CPU silently, the only
+  symptom being that it was slow. It now selects cuda > mps > cpu with no configuration,
+  moves the model and every batch, and returns the merged model to the host before
+  serialising (both `save_pretrained` and the GGUF converter are host-side). Verified on an
+  NVIDIA GB10: 60 iterations in 33.5s against 367.6s on CPU, with identical loss convergence
+  (1.275 train / 1.337 val vs 1.299 / 1.348), so bf16-on-GPU is numerically equivalent and
+  not merely faster.
+- **The memory gate understands GPUs.** It previously budgeted the cgroup limit, which is the
+  wrong resource on a GPU — a container can have 8Gi of RAM and a 24GB card, or the reverse.
+  The budget now comes from the device, and the peak is measured from
+  `max_memory_reserved()` rather than `max_memory_allocated()`: the caching allocator holds
+  more than it hands out (measured 3.71 GiB reserved against 1.92 allocated on the same run),
+  and it is the reserved pool that a further allocation fails against. Coefficients are now
+  per-device — the CPU-fitted ones UNDER-predicted GPU peaks by up to 0.8 GiB, the dangerous
+  direction, because gradient checkpointing saves far less on a GPU (the seq x vocab logits
+  term does not shrink with it).
+- **Only 85% of free VRAM is offered as budget.** On unified-memory parts (Grace-Blackwell,
+  Jetson) device memory IS host memory, so a run that claims all of it starves the host and
+  can wedge the machine rather than failing inside the container — observed directly on a
+  GB10. For the same reason the gate stays predictive and never attempts-and-recovers: a CUDA
+  OOM is not reliably a catchable exception there.
+- **A CUDA trainer image** (`Dockerfile.cuda`). Two things differ from the CPU build and both
+  matter: torch comes from the default index rather than the cpu-pinned one, and `gcc` +
+  `libc6-dev` are installed because Triton JIT-compiles a shim against `Python.h` on the
+  first CUDA kernel — without a compiler a GPU run dies on the FIRST TRAINING STEP, after the
+  model has loaded onto the device. The CPU image never installs Triton, which is why no
+  amount of CPU testing surfaces this.
+- **The trainer can be its own Deployment** (`trainer.split`). A GPU belongs to the trainer,
+  not the UI: as a sidecar the whole pod must be scheduled onto the GPU node, so an idle web
+  UI and an ollama occupy capacity billed at GPU rates. Split, only the trainer lands there.
+  This is possible because the app now posts the job spec and dataset INLINE, so the trainer
+  no longer needs to share VKE's forge volume — without that, splitting would require an RWX
+  StorageClass, since the models claim is ReadWriteOnce.
+- **GPU wiring that actually works.** Being on a GPU node is not enough: the device plugin
+  injects devices only when the container requests `nvidia.com/gpu`, and GPU node groups are
+  conventionally tainted, so without tolerations the pod never lands there. Both are wired,
+  with an optional `runtimeClassName` for clusters that route GPUs through containerd
+  handlers. `trainer.gpu.enabled` without `trainer.split` now FAILS the render instead of
+  silently producing a CPU-image sidecar with no GPU request.
+- **The GGUF converter path is no longer hardcoded** to `/app`, so the trainer can run outside
+  its own container layout.
+
+
+## 1.6.2 · 2026-08-25
+
+- **Every bundled base can actually be fine-tuned now.** `train_lora.py` loaded the base in
+  fp32, which put all four bundled bases over the trainer's memory limit at the shipped
+  `max_seq_length=1024` — measured, the picker was offering three bases that could never
+  finish and one that only survived because the seeded SRE rows are short (~260 tokens). The
+  base now loads in bf16 with `low_cpu_mem_usage`, and gradient checkpointing switches on
+  when the run needs it. Measured peaks at seq 1024: Qwen-0.5B 2.0 GiB · gemma-1b 3.2 GiB ·
+  Llama-1B 4.3 GiB · SmolLM2-1.7B 5.4 GiB, all previously OOMKills. bf16 also proved ~28%
+  FASTER than fp32 on CPU here, so this costs nothing at the shipped sequence length.
+- **A run that cannot fit is refused, not OOM-killed.** The trainer now reads its own cgroup
+  limit and estimates the peak from the base's real architecture (params, layers, hidden,
+  vocab) and the sequence length, plus the free space the fuse needs. Over budget, it
+  refuses up front and names a `max_seq_length` that would fit. An OOMKill loses the log,
+  restarts the container and leaves the job unrecoverable, so it must never be the way a
+  client discovers a run was too big. The estimate is fitted to measured runs and biased to
+  over-predict.
+- **Two training runs can no longer collide.** `POST /jobs` refuses while a run is in
+  flight. Two concurrent runs each load their own copy of the base, so the pair exceeds any
+  limit one run fits in — this is what killed the `ft1` run.
+- **A restarted trainer no longer loses a run forever.** The job registry lived only in the
+  process's memory, so after a restart every id answered `"unknown"`, which is not terminal:
+  the Studio polled a dead job indefinitely. State is now on the models volume, and a run
+  whose process vanished reports `failed` with the reason.
+- **Superseded model weights are reclaimed.** Ollama never garbage-collects: re-importing an
+  alias rewrites its manifest and orphans the previous weights (measured 948 MB per
+  Qwen-0.5B retrain), so retraining — and the nightly auto-retrain especially — filled the
+  models volume. Unreferenced blobs are now swept after each import, and fuse scratch is
+  cleaned on the failure paths too, not only on success.
+- **Ollama sized to what it actually serves.** Serving one 2.2 GB model measured 3.99 GiB
+  against a 4 GiB limit. The limit is now 8 GiB, with `OLLAMA_MAX_LOADED_MODELS=1` so it
+  cannot stack a second model inside it. The trainer limit goes 6 → 8 GiB and the models
+  volume 30 → 60 GiB, which holds ten trained aliases of any bundled base.
+- **The Studio stops lying about a failed run.** A new launch no longer leaves the previous
+  run's loss curve on screen under the new job's name (`ft1` displayed `k8s-sre`'s curve),
+  polling gives up on an unrecoverable run instead of spinning forever, and a refused launch
+  says why.
+
+
+## 1.6.1 · 2026-08-25
+
+- **The evals path follows the Settings gateway.** `backend/evals.py` captured
+  `VKE_SWITCHBOARD` at import and used it as the fallback in `_target_base()`, so an
+  operator who changed the chat gateway on the Settings page would not move evals until the
+  pod restarted — the same bug fixed for `chat.py` and `factory/train.py` in 1.3.5, missed
+  because this file arrived with the t4tarzan merge. A per-alias endpoint still takes
+  precedence, as before.
+- **The finetune path stops misrepresenting its endpoint.** `factory/train.py` carried a
+  module-level `FOUNDRY` constant that nothing read; it made the Foundry endpoint look
+  env-only and import-frozen when in fact both calls resolve `llm_auth.foundry()` per
+  request, so a Settings edit applies immediately. Removed, with a note pointing at the real
+  resolution site. Launch failures now name the endpoint too — a connection error carries no
+  URL, so a mistyped Foundry URL used to produce a bare "connection refused".
+- **One source of truth for the forge directory.** `status_flow()` looked for adapters under
+  `VKE_FORGE` defaulting to `/forge`, while `prepare()` writes under the module `FORGE`,
+  which defaults to `~/hub2/projects/forge`. On a box with `VKE_FORGE` unset the two
+  disagreed. Latent in-cluster, where both are `/forge`.
+
 ## 1.6.0 · 2026-08-24
 
 - **The two lines merge.** This release joins the `t4tarzan` trunk (the air-gap arc 1.3.0,
