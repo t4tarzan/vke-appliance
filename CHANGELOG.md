@@ -1,5 +1,20 @@
 # VKE — Changelog
 
+## 1.6.10 · 2026-08-26
+
+**Ask the Database answers on every install.** The tile used to require a configured
+read-only dept Postgres and showed an empty screen everywhere else — on a console
+sitting on a database full of answerable operational questions. It now offers three
+sources: the configured Postgres (unchanged, still the default when present), **VKE's
+own database** (incidents · fixes · approvals · usage — read-only, and fenced by a
+SQLite authorizer to a safe table allowlist, so generated SQL physically cannot read
+users, sessions, keys or settings), and **any uploaded dataset** (the record store
+materialised as one in-memory table — SQL over any CSV/JSONL upload with zero setup).
+
+**The SQL writer is pickable.** A tiny domain finetune answers incident questions but
+writes poor SQL; the tile now has a model dropdown (plus a `nlsql_model` setting) so a
+strong general model writes the SELECT while the receipt still names it.
+
 ## 1.6.9 · 2026-08-26
 
 - **Chat had been answering with no retrieval at all, and nothing said so.**

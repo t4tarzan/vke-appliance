@@ -1,12 +1,5 @@
 {
-  "version": "1.6.9",
+  "version": "1.6.10",
   "date": "2026-08-26",
-  "highlights": [
-    "Chat had been answering with no retrieval at all, and nothing said so.",
-    "The finetune prompt now matches the serving prompt.",
-    "A known-fixes corpus, because telemetry contains no fixes.",
-    "Answers follow a contract.",
-    "Training runs report their coverage.",
-    "Nightly ingestion, threshold-gated retraining."
-  ]
+  "highlights": []
 }
