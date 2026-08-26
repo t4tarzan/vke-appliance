@@ -1,5 +1,10 @@
 {
   "version": "1.6.10",
   "date": "2026-08-26",
-  "highlights": []
+  "highlights": [
+    "Ask the Database answers on every install.",
+    "VKE's own database.",
+    "any uploaded dataset.",
+    "The SQL writer is pickable."
+  ]
 }
