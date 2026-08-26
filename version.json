@@ -1,12 +1,12 @@
 {
-  "version": "1.6.4",
+  "version": "1.6.9",
   "date": "2026-08-26",
   "highlights": [
-    "A finetune is imported as base + adapter, not a full copy of the model.",
-    "The chat alias binds to a model the gateway actually serves.",
-    "Point at an ollama you already run",
-    "Training estimates tell the truth on a GPU.",
-    "The memory gate refitted against a second model.",
-    "Eviction and payload hardening."
+    "Chat had been answering with no retrieval at all, and nothing said so.",
+    "The finetune prompt now matches the serving prompt.",
+    "A known-fixes corpus, because telemetry contains no fixes.",
+    "Answers follow a contract.",
+    "Training runs report their coverage.",
+    "Nightly ingestion, threshold-gated retraining."
   ]
 }

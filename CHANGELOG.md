@@ -1,5 +1,131 @@
 # VKE — Changelog
 
+## 1.6.9 · 2026-08-26
+
+- **Chat had been answering with no retrieval at all, and nothing said so.**
+  `rag2.has_content()` ran `SELECT EXISTS(...)` and read `bool(r[0])`. psycopg's
+  `dict_row` keys by NAME only while `sqlite3.Row` accepts both, so this passed on the
+  appliance's SQLite and raised `KeyError: 0` on every Postgres install — and
+  `chat._rag_ground` wrapped the call in `except Exception: pass`, so each answer
+  silently lost its grounding. The fifth instance of the bug class fixed in 1.6.7, and
+  the first one that failed invisibly. Verified against a live Postgres install: the
+  KeyError was the ONLY thing blocking retrieval — with it fixed, "pod stuck Pending on
+  the traefik daemonset" grounds to 4.4KB with 4 citations, top hit the exact matching
+  signature. The probe is now `SELECT 1 ... LIMIT 1`, which needs no column name on
+  either backend, and a grounding failure is logged instead of swallowed.
+  Swept the whole backend for positional row access: this was the only real instance.
+- **The finetune prompt now matches the serving prompt.** Training stamped
+  `factory.data.SYSTEM` while chat sent whatever `model_prompts.json` resolved to — two
+  different strings. With `mask_prompt = true` the system turn is pure conditioning, so
+  every answer was degraded for no visible reason. `chat.persona_for(alias)` is now the
+  single source and `train.prepare()` stamps it onto every row, so the contract holds
+  even for an alias with no entry of its own.
+- **A known-fixes corpus, because telemetry contains no fixes.** A crashed-pods export
+  has a reason and a message but nothing that says what to DO, so training a
+  fix-suggester on it can only teach a constant. `fixcorpus` harvests real remediations
+  from playbooks, proven KB fixes and approved actions, keyed on signature so a row
+  joins the KB, the playbook library and ops-KB retrieval. Gateway distillation writes
+  CANDIDATES that are retrievable immediately but never training targets until a human
+  signs them off. Exports both ways: signature cards into ops-KB (useful with no
+  training at all) and a training view of the verified rows.
+- **Answers follow a contract.** The persona now demands Diagnosis / Likely cause /
+  Next step / Fence with citations, and a deterministic signature match is layered under
+  the semantic hits — an exact `kind:reason:owner` match should never lose to cosine
+  distance. Subsumed reason tokens are dropped so an ImagePullBackOff card stops riding
+  along on a CrashLoopBackOff question.
+- **Training runs report their coverage.** `iters x batch_size` is a hard cap
+  independent of dataset size: the default 60 x 2 sees 120 rows, so a 10k-row upload
+  trained on 1.2% of itself. `prepare()` now returns coverage and warns in both
+  directions — too little, and the memorisation case that made a run's validation loss
+  climb 0.233 -> 0.344 while train loss fell to 0.059.
+- **Nightly ingestion, threshold-gated retraining.** A new `fix_corpus_sync` job
+  harvests and re-ingests every night: cheap, safe, and it improves tomorrow's answers
+  with no promotion decision. `auto_retrain` now refuses to run without an eval set to
+  gate on, and prefers the fix corpus over raw event history. `evals.seed_from_corpus()`
+  builds that set, checking the remediation CLASS so wording may vary but the action may
+  not.
+- **Datasets keep every column.** An upload now writes two outputs: a record store with
+  every source column preserved, and the 2-column training view as a projection of it.
+  The CSV path previously read columns 0 and 1 and discarded the rest inside the parser
+  — a 7-column export lost 5 columns with no warning and no way back, since the raw
+  upload is never kept. Uploads report `columns_used` / `columns_dropped` and refuse to
+  pass silently when the target has fewer than 2 distinct values. `rebuild_view()` and
+  `query_records()` re-project a different target or a filtered subset without a
+  re-upload.
+- **Diagnose on an alert now carries context into chat.** app.go() ran the screen
+  function without awaiting it, so alertToChat prefilled the input before the chat
+  screen had rendered it — the click landed on an empty chat. The context now hands
+  off through sessionStorage (question + signature), consumed after the DOM exists.
+- **Consensus and distillation honor the Chat gateway URL setting.** consensus_verify
+  read VKE_SWITCHBOARD env with a :8000 default, ignoring the "Chat gateway URL (chat +
+  consensus)" setting — so pointing chat at Ollama left consensus hammering :8000 until
+  timeout. Both now resolve through the one setting, like chat.
+- **Fixed alongside:** the PII vault ate Kubernetes names (`dcio-accum-rk-balance-...`
+  matched the `sk|pk|rk` secret pattern and became `[SECRET_n]`, destroying the
+  service-name signal the module exists to keep); `evals.SWITCHBOARD` was referenced by
+  `app.py` but never defined, so the non-alias eval path raised AttributeError; daily
+  audit training rows used the report's title line as their summary, teaching the model
+  to echo a header; and both the dataset directory and the ops-KB store lived on the
+  container's ephemeral overlay, so uploads and ingested runbooks were lost on every
+  pod restart.
+
+
+## 1.6.7 · 2026-08-25
+
+- **Four screens returned 500 on every Postgres-backed install.** All four were SQLite
+  idioms the translation shim does not cover, so they worked on the appliance's SQLite and
+  failed on DKubeX — where Postgres is the default. Found by probing each feature endpoint
+  on a live install rather than by reading code:
+  - **Predictive alerts** (`/v1/predict`) used `HAVING n >= 2`, referencing a SELECT alias.
+    Postgres requires the aggregate to be repeated: `HAVING COUNT(*) >= 2`.
+  - **Analytics** (`/v1/analytics`) grouped by `json_extract(payload,'$.ok')` — a SQLite
+    builtin with no Postgres equivalent. The flag is now tallied in Python; the payload is
+    already JSON text and outcome rows are few.
+  - **Usage summary** (`/v1/usage/summary`) used `SUM(status>=400)`. Postgres has no
+    `sum(boolean)`; now an explicit `CASE WHEN`.
+  - **Tickets** (`/v1/tickets`) ordered by `id` on the `event` table, which has no such
+    column — SQLite silently fell back to its implicit rowid. Ordered by `ts` now, the real
+    key.
+  Audited the four other `ORDER BY id` sites: those query tables that genuinely declare an
+  id column, and are unaffected.
+
+
+## 1.6.6 · 2026-08-25
+
+- **The Compute picker says whether you are training on CPU or GPU.** It offered only
+  "Local — free", so an operator who had moved the trainer onto a GPU node could not tell
+  from the UI whether the GPU was being used — which is exactly why the silent CPU fallback
+  fixed in 1.6.3 went unnoticed for so long. It now reads "Local CPU — free" or
+  "Local GPU: NVIDIA A100-80GB — free", named from the device the trainer reports on
+  `/health`, with a line underneath spelling out what that means: slower runs and possible
+  refusals on CPU, roughly an order of magnitude faster on GPU. An older trainer that does
+  not report a device is treated as CPU.
+
+
+## 1.6.5 · 2026-08-25
+
+- **Retraining an alias really does continue from the previous run.** "Retrain +data" was
+  meant to be v2 on top of v1 and never was: the fused model is written to scratch and
+  deleted after import, so it never appeared in the base picker, and every retrain silently
+  restarted from the raw base. With the same iteration count on a smaller follow-up dataset,
+  v2 could not beat v1. Training now resumes from the alias's saved LoRA adapter. Measured
+  with the shipped datasets — `sre-pods-100`, then `sre-pods-append-50` — validation loss goes
+  1.347 → **0.069**. The Studio now says, before the spend gate, that a run will continue: it
+  usually converges lower and faster, but it keeps the earlier specialisation, and a new alias
+  name is the way to train data on its own.
+- **Completed runs are no longer dropped from the history.** Runs were deduped by the
+  trainer's job id, and that counter restarts at `finetune-1` whenever the forge volume is
+  recreated — while the history lives in the database and survives. So after a reinstall every
+  new run collided with one recorded by a previous install and vanished. Observed live: a
+  freshly trained alias missing from the run list and the overlay, which showed two
+  28-hour-old runs instead.
+- **The v1 → v2 story reports what the data shows.** Both the Studio overlay and the Iterative
+  Demo printed "more data, lower loss" whatever the numbers said — so two runs on the same
+  corpus (seeded training, identical curves) were presented as an improvement that had not
+  happened. They now report the percentage when it improved, plainly that it did not when it
+  got worse, and that there is nothing to compare when both runs used the same corpus.
+
+
 ## 1.6.4 · 2026-08-25
 
 - **A finetune is imported as base + adapter, not a full copy of the model.** Every alias used
