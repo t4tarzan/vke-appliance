@@ -1,5 +1,33 @@
 # VKE — Changelog
 
+## 1.6.11 · 2026-08-27
+
+**Granite 4.2 3B replaces SmolLM2 + qwen-1.5 as the bundled brain.** One Apache-2.0 dense
+3B (ChatML, 512K context, reasoning-capable) is now both the trainable base (bf16 in the
+trainer, with IBM's official Q4_K_M GGUF as a sidecar) and the chat model (baked into the
+ollama image). Granite's tokenizer is unknown to the pinned GGUF converter, so its base
+imports from the official GGUF and finetunes ride as adapters — no converter change.
+Granite THINKS by default and silently spends the whole budget in the thinking channel;
+chat sends `think: false` for granite backings. SmolLM2 stays available on-demand.
+
+**Trained models stop looping.** An overtrained small model loses its end-of-turn habit
+on novel prompts and self-QA-loops to the token budget (reproduced with SmolLM2 at 10
+epochs); every trained import's Modelfile now carries `repeat_penalty 1.3` and an output
+cap.
+
+**Mistral-7B ships in the air-gap bundle.** It was "on-demand from HuggingFace" — the one
+thing a sealed install cannot do; the bundle now carries the weights and mounts them into
+the trainer (`BUNDLE_MISTRAL=0` to skip).
+
+**Trained-model answers come in three sections.** Pick a trained alias in chat and every
+answer is structured: **① From the training data** — deterministic retrieval from the exact
+dataset the model was trained on, cited by dataset + row numbers (the facts live in the
+data, not the weights); **② Live cluster & learned context** — the live cluster picture and
+matching known fixes/history, shown only when the live-cluster toggle is on (off =
+dataset-only mode: the model is instructed to use nothing beyond the ① rows and to say so
+when they don't cover the question); **③ the reasoned answer**, streamed below, following
+the Diagnosis/Likely cause/Next step/Fence contract with its source citations.
+
 ## 1.6.10 · 2026-08-26
 
 **Ask the Database answers on every install.** The tile used to require a configured
