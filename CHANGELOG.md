@@ -1,5 +1,18 @@
 # VKE — Changelog
 
+## 1.6.13 · 2026-08-27
+
+- **The Training Studio picker can no longer contradict the chat model.** Three
+  distribution surfaces had drifted after the granite swap — the cloud twin's fallback
+  catalog and BOTH Helm charts still listed the SmolLM2-era lineup while chat served
+  granite. The fresh-box catalog is aligned to the shipped bundle, the published chart
+  is corrected (install with `--version 1.6.12+`), and the app now **self-heals stale
+  environments**: installs whose `VKE_BASES` predates the swap still show granite
+  (container-trainer shapes) and Mistral (every unsealed shape) in the picker.
+- **The studio manual ships on the documentation page.** How a CSV becomes both a
+  trained model and its retrieval source, which base to pick, and the batch/iteration
+  coverage math with verified timings — with an architecture diagram.
+
 ## 1.6.12 · 2026-08-27
 
 - **Export a trained model from the Studio — adapter + model card, never the base.**
