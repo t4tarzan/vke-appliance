@@ -1,5 +1,20 @@
 # VKE — Changelog
 
+## 1.6.15 · 2026-08-28
+
+- **The Agent Loop is now a watchdog console.** Four tabs — Overview, Watchlist, Jobs,
+  History — with a grouped view of every sweep the loop runs.
+- **The watchlist: pre-authorized remediation per failure signature.** Author a rule
+  binding a fenced fix to a signature; when that signature fires, the fix is proposed
+  to the approval lane — or, ONLY if the rule is explicitly set to auto AND armed AND
+  the global watchdog master switch is on (default off), applied automatically through
+  the same fence, circuit breaker, audit chain and Telegram notification the T0 lane
+  uses. New rules always start in propose mode, unarmed.
+- **Custom scheduled jobs.** Add your own jobs to the agent loop's schedule from the
+  console; job runs are grouped and inspectable.
+- Playbook-first watchdog remediation and authored-artifact surfacing round out the
+  enhancement-2 set.
+
 ## 1.6.14 · 2026-08-28
 
 - **Structured remediation proposals.** A proposal now carries Why / How / Verify /
