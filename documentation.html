@@ -52,7 +52,7 @@
 <div class="wrap">
   <nav class="toc">
     <div class="h">User manual</div>
-    <a href="#manual">Overview</a><a href="#setup">Setup</a><a href="#features">Features</a><a href="#studio">Training Studio</a><a href="#roles">Roles &amp; login</a><a href="#logins">Demo logins</a><a href="#lanes">The six lanes</a><a href="#loop-walk">A day in the loop</a>
+    <a href="#manual">Overview</a><a href="#setup">Setup</a><a href="#features">Features</a><a href="#studio">Training Studio</a><a href="#studio-manual" style="padding-left:14px">— the studio manual</a><a href="#roles">Roles &amp; login</a><a href="#logins">Demo logins</a><a href="#lanes">The six lanes</a><a href="#loop-walk">A day in the loop</a>
     <div class="h">Technical</div>
     <a href="#tech">Architecture</a><a href="#fence">The safety fence</a><a href="#schemas">Data model</a><a href="#deploy">Deployment</a><a href="#demos">Two demo lanes</a>
     <div class="h">Reference</div>
@@ -273,6 +273,136 @@ open http://localhost:9040</pre>
       <div class="callout">The studio also feeds the <b>Iterative Demo</b> tile: once two real runs exist it stops showing the staged
         story and overlays your actual loss curves. And the whole factory — studio included — runs <b>standalone on its own port</b>
         (same code, same data), for deployments that only want the fine-tuning product.</div>
+
+      <h3 id="studio-manual" style="margin-top:26px">The studio manual — from CSV to answers</h3>
+      <p>One import feeds <b>two lanes</b>. Your CSV becomes a <b>record store</b> (every row, original
+        columns preserved — where the facts live) and a <b>training view</b> (chat pairs: the other columns
+        become the question, the auto-picked target column — <span class="mono">reason / answer / label / fix…</span> —
+        becomes the answer; persona-stamped, PII-redacted, with a saved recipe so the same records can be
+        re-targeted later). Training consumes the view; <em>inference retrieves from the record store</em>.</p>
+      <div style="overflow-x:auto;margin:14px 0"><svg viewBox="0 0 980 560" xmlns="http://www.w3.org/2000/svg" font-family="ui-sans-serif,system-ui" font-size="12">
+  <text x="490" y="20" text-anchor="middle" font-weight="700" fill="#293341">one CSV import → the training lane AND the retrieval lane</text>
+
+  <rect x="20" y="40" width="180" height="60" rx="10" fill="#EEF1F5" stroke="#C9D2DD"/>
+  <text x="110" y="66" text-anchor="middle" font-weight="700">your CSV / JSONL</text>
+  <text x="110" y="84" text-anchor="middle" fill="#5D6B7E" font-size="10.5">timestamp · pod · reason · …</text>
+
+  <rect x="250" y="40" width="220" height="88" rx="10" fill="#E8F2EE" stroke="#9CC4B4"/>
+  <text x="360" y="62" text-anchor="middle" font-weight="700">RECORD STORE</text>
+  <text x="360" y="79" text-anchor="middle" fill="#5D6B7E" font-size="10.5">name.records.jsonl — every row,</text>
+  <text x="360" y="93" text-anchor="middle" fill="#5D6B7E" font-size="10.5">original columns preserved</text>
+  <text x="360" y="110" text-anchor="middle" fill="#2E6B43" font-size="10.5">= the FACTS live here</text>
+
+  <rect x="250" y="150" width="220" height="88" rx="10" fill="#EDEAF5" stroke="#B4A8D4"/>
+  <text x="360" y="172" text-anchor="middle" font-weight="700">TRAINING VIEW</text>
+  <text x="360" y="189" text-anchor="middle" fill="#5D6B7E" font-size="10.5">name.jsonl — chat pairs: columns → user,</text>
+  <text x="360" y="203" text-anchor="middle" fill="#5D6B7E" font-size="10.5">target column → assistant · persona-stamped</text>
+  <text x="360" y="220" text-anchor="middle" fill="#5D6B7E" font-size="10.5">PII-redacted · .view.json recipe (re-targetable)</text>
+
+  <rect x="520" y="150" width="200" height="88" rx="10" fill="#EDEAF5" stroke="#B4A8D4"/>
+  <text x="620" y="172" text-anchor="middle" font-weight="700">TRAINER (LoRA)</text>
+  <text x="620" y="189" text-anchor="middle" fill="#5D6B7E" font-size="10.5">base stays frozen · adapter ≈ 20MB</text>
+  <text x="620" y="203" text-anchor="middle" fill="#5D6B7E" font-size="10.5">MLX (native mac) · torch (appliance)</text>
+  <text x="620" y="220" text-anchor="middle" fill="#5D6B7E" font-size="10.5">CUDA on GPU hosts (~13×/iter)</text>
+
+  <rect x="770" y="150" width="190" height="88" rx="10" fill="#EDEAF5" stroke="#B4A8D4"/>
+  <text x="865" y="172" text-anchor="middle" font-weight="700">YOUR ALIAS</text>
+  <text x="865" y="189" text-anchor="middle" fill="#5D6B7E" font-size="10.5">base + adapter in Ollama</text>
+  <text x="865" y="203" text-anchor="middle" fill="#5D6B7E" font-size="10.5">Promote · Test · Set default</text>
+  <text x="865" y="220" text-anchor="middle" fill="#5D6B7E" font-size="10.5">Export = adapter + model card</text>
+
+  <rect x="20" y="300" width="940" height="150" rx="12" fill="#F6F1E7" stroke="#D8C9A8"/>
+  <text x="490" y="322" text-anchor="middle" font-weight="700">INFERENCE — pick the trained alias in chat, every answer has three sections</text>
+  <rect x="40" y="336" width="290" height="98" rx="8" fill="#FFFFFF" stroke="#D8C9A8"/>
+  <text x="185" y="356" text-anchor="middle" font-weight="700" font-size="11.5">① from the training data (RAG)</text>
+  <text x="185" y="373" text-anchor="middle" fill="#5D6B7E" font-size="10.5">deterministic keyword retrieval over the</text>
+  <text x="185" y="387" text-anchor="middle" fill="#5D6B7E" font-size="10.5">RECORD STORE — pod-shaped tokens weigh 6×</text>
+  <text x="185" y="401" text-anchor="middle" fill="#5D6B7E" font-size="10.5">rows cited as [row N] · no model in the loop</text>
+  <text x="185" y="418" text-anchor="middle" fill="#8A6D1F" font-size="10.5">the facts — always from data, never weights</text>
+  <rect x="345" y="336" width="290" height="98" rx="8" fill="#FFFFFF" stroke="#D8C9A8"/>
+  <text x="490" y="356" text-anchor="middle" font-weight="700" font-size="11.5">② live &amp; learned context</text>
+  <text x="490" y="373" text-anchor="middle" fill="#5D6B7E" font-size="10.5">toggle ON: live cluster brief + fix corpus</text>
+  <text x="490" y="387" text-anchor="middle" fill="#5D6B7E" font-size="10.5">(signature match) + semantic RAG</text>
+  <text x="490" y="401" text-anchor="middle" fill="#5D6B7E" font-size="10.5">toggle OFF: dataset-only mode — the model</text>
+  <text x="490" y="415" text-anchor="middle" fill="#5D6B7E" font-size="10.5">may use NOTHING beyond the ① rows</text>
+  <rect x="650" y="336" width="290" height="98" rx="8" fill="#FFFFFF" stroke="#D8C9A8"/>
+  <text x="795" y="356" text-anchor="middle" font-weight="700" font-size="11.5">③ the model's reasoned answer</text>
+  <text x="795" y="373" text-anchor="middle" fill="#5D6B7E" font-size="10.5">persona-matched prompt (train = serve)</text>
+  <text x="795" y="387" text-anchor="middle" fill="#5D6B7E" font-size="10.5">no-think for granite · repeat damper</text>
+  <text x="795" y="401" text-anchor="middle" fill="#5D6B7E" font-size="10.5">streams under the sections + citations</text>
+  <text x="795" y="418" text-anchor="middle" fill="#8A6D1F" font-size="10.5">+ confidence &amp; source-conflict chips</text>
+
+  <rect x="250" y="480" width="460" height="60" rx="10" fill="#E8F2EE" stroke="#9CC4B4"/>
+  <text x="480" y="504" text-anchor="middle" font-weight="700">ASK THE DATABASE — the same record store, by SQL</text>
+  <text x="480" y="522" text-anchor="middle" fill="#5D6B7E" font-size="10.5">"top 3 namespaces by crashes" → real SELECT … GROUP BY, SQL shown as a receipt — exact counts</text>
+
+  <line x1="200" y1="70" x2="250" y2="80" stroke="#B9C4D0" stroke-width="1.5"/>
+  <line x1="360" y1="128" x2="360" y2="150" stroke="#B9C4D0" stroke-width="1.5"/>
+  <line x1="470" y1="194" x2="520" y2="194" stroke="#B9C4D0" stroke-width="1.5"/>
+  <line x1="720" y1="194" x2="770" y2="194" stroke="#B9C4D0" stroke-width="1.5"/>
+  <line x1="360" y1="104" x2="185" y2="336" stroke="#9CC4B4" stroke-width="1.5"/>
+  <line x1="865" y1="238" x2="795" y2="336" stroke="#B9C4D0" stroke-width="1.5"/>
+  <line x1="360" y1="104" x2="440" y2="480" stroke="#9CC4B4" stroke-width="1.5"/>
+</svg></div>
+      <div class="callout"><b>The one idea everything follows from:</b> training teaches the model the
+        <b>task</b> (format, persona, classification habit); the record store carries the <b>facts</b>.
+        A model trained on 10,000 crash rows cannot recall row 4,317 and cannot say "I don't know" —
+        retrieval can do both. That's why a trained model's answers open with <b>① rows from its own
+        dataset, cited by row number</b>, and why appending data updates answers <em>instantly</em>
+        while the weights only need the next retrain.</div>
+
+      <h3>Choosing a base model</h3>
+      <table>
+        <thead><tr><th>Base</th><th>Size</th><th>Trains on</th><th>Pick it when</th></tr></thead>
+        <tbody>
+          <tr><td><b>Qwen2.5-0.5B</b> <span class="pill">default</span></td><td>0.5&nbsp;GB</td><td>CPU, seconds–minutes</td><td>prototyping · classification · fast recipe iteration</td></tr>
+          <tr><td>Llama-3.2-1B / gemma-3-1b</td><td>1&nbsp;GB</td><td>CPU, minutes</td><td>a bit more language quality, still cheap</td></tr>
+          <tr><td><b>Granite 4.2 3B</b> <span class="pill">the bundled brain</span></td><td>3&nbsp;GB</td><td>GPU ~2&nbsp;min · CPU 10–20&nbsp;min</td><td>the quality answer — reasoning-capable, best final output</td></tr>
+          <tr><td>Mistral-7B</td><td>7&nbsp;GB</td><td>GPU only, realistically</td><td>maximum quality when a GPU host exists (downloads on first train)</td></tr>
+        </tbody>
+      </table>
+      <p>Rule of thumb: <b>iterate the recipe on Qwen-0.5B, ship on Granite.</b> A 0.5B run tells you in
+        seconds whether your target column and coverage are right; the same launch on Granite gives the quality.</p>
+
+      <h3>Batch size &amp; iterations — the coverage math</h3>
+      <p>A run sees <span class="mono">iterations × batch</span> sample visits; one full pass over the data
+        ("one epoch") needs <span class="mono">rows ÷ batch</span> iterations. The studio prints this as a
+        coverage warning when your settings under- or over-shoot. All timings below are from real runs:</p>
+      <table>
+        <thead><tr><th>Dataset size</th><th>batch</th><th>iterations</th><th>That is</th><th>Verified timing</th></tr></thead>
+        <tbody>
+          <tr><td>≤ 60 rows (runbooks, curated fixes)</td><td>2</td><td>30–60</td><td>1–2 epochs</td><td>Granite 20 it: <b>98s GPU</b> / 651s CPU · Qwen-0.5B 60 it: <b>~9s</b></td></tr>
+          <tr><td>100 – 1,000 rows</td><td>2–4</td><td>≈ rows ÷ batch</td><td>~1 epoch</td><td>Qwen-0.5B: minutes on CPU</td></tr>
+          <tr><td>~10,000 rows (telemetry)</td><td>4</td><td>2,500</td><td>exactly 1 epoch</td><td>Qwen-0.5B: <b>684s</b>, val&nbsp;loss 0.018</td></tr>
+        </tbody>
+      </table>
+      <ul>
+        <li><b>Aim for about one epoch.</b> Under it, big datasets are barely sampled (60×2 visits see 1.2%
+          of a 10k set). Over it, <b>5–10 epochs on a small set destroys the end-of-turn habit</b> and the
+          model loops on novel questions — a repeat-penalty damper ships in every trained import, but don't
+          rely on it.</li>
+        <li><b>Watch validation loss, not train loss.</b> Falling = learning; rising while train falls =
+          memorizing — stop or cut iterations. Good runs: val 0.018 (10k rows · 1 epoch), val ~0.4 (60 rows).</li>
+        <li><b>Learning rate 2e-4</b> is the default and rarely needs touching.</li>
+        <li><b>Appending data:</b> "Retrain +data" continues <em>from the fused v1</em> (a real v2 started at
+          loss 0.41 where v1 started at 1.49) — and give appended rows enough iterations to compete with
+          memorized ones (a real append needed 240 where 80 underfit).</li>
+      </ul>
+
+      <h3>What happens at inference</h3>
+      <ol>
+        <li>Your alias resolves to base + adapter.</li>
+        <li><b>①</b> deterministic retrieval over the record store → matching rows cited
+          <span class="mono">[row N]</span> (workload-shaped tokens dominate the match — asking about
+          <span class="mono">payments-api-7f9</span> finds <em>that</em> pod's rows).</li>
+        <li><b>②</b> live-cluster toggle ON → cluster brief + proven-fix corpus + semantic RAG;
+          OFF → the model may use <em>nothing</em> beyond the ① rows.</li>
+        <li><b>③</b> the model answers under the persona it was trained with, streamed with citations plus
+          <b>confidence and source-conflict chips</b> (computed from the grounding, never by the model).</li>
+        <li>For exact counts and aggregates, skip the model: <b>Ask the Database</b> runs real SQL over the
+          same record store, receipt shown.</li>
+      </ol>
+
     </section>
 
     <section id="roles">
