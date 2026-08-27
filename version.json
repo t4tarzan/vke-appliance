@@ -1,9 +1,9 @@
 {
-  "version": "1.6.15",
+  "version": "1.6.16",
   "date": "2026-08-28",
   "highlights": [
-    "The Agent Loop is now a watchdog console.",
-    "The watchlist: pre-authorized remediation per failure signature.",
-    "Custom scheduled jobs."
+    "One-click per-namespace write access \u2014 frictionless, and safe by construction.",
+    "The action console explains \"forbidden\" honestly.",
+    "Settings \u2192 Cluster write access"
   ]
 }

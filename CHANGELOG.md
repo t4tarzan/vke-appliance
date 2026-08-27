@@ -1,5 +1,24 @@
 # VKE — Changelog
 
+## 1.6.16 · 2026-08-28
+
+- **One-click per-namespace write access — frictionless, and safe by construction.**
+  Until now, an in-cluster install hitting "cannot patch … is forbidden" needed a helm
+  upgrade to grant write. Now: enable `rbac.selfServiceWrite=true` ONCE in the chart and
+  every workload card (and the Settings page) gains a read/write toggle per namespace.
+  The mechanism is the Kubernetes `bind`-verb pattern: the chart creates ONE fenced
+  write ClusterRole (scale · rollout-restart — never delete) and grants the app only
+  the right to bind THAT role, so the API server itself refuses any broader grant even
+  if the app were compromised (proven live: a cluster-admin bind attempt is rejected
+  by Kubernetes, not by us). Toggles are admin/sre_lead-only and every grant/revoke
+  lands on the tamper-evident event log. All namespaces still start read-only.
+- **The action console explains "forbidden" honestly.** An RBAC denial now shows
+  "namespace is read-only" with a one-click *enable fenced write + retry* — instead of
+  looking like a fence block.
+- **Settings → Cluster write access** shows the live picture (self-service active /
+  cluster-wide static / structurally read-only) with per-namespace toggles or the exact
+  one-time enablement command.
+
 ## 1.6.15 · 2026-08-28
 
 - **The Agent Loop is now a watchdog console.** Four tabs — Overview, Watchlist, Jobs,
