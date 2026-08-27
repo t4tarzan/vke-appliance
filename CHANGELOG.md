@@ -1,5 +1,44 @@
 # VKE — Changelog
 
+## 1.6.12 · 2026-08-27
+
+- **Export a trained model from the Studio — adapter + model card, never the base.**
+  A small Export button sits beside Promote / Test / Set default on every trained
+  model's row. It downloads a zip holding the LoRA adapter only (~10–20MB — the base
+  model stays IBM's/Meta's to download) plus a model card (JSON + markdown) with the
+  full provenance: base model, dataset name, schema, row count, format, training
+  parameters, final/validation loss, serving version, and the VKE version that
+  trained it. Works on split-trainer installs too — the trainer now serves its
+  adapters over its own API.
+- **Mistral 7B shows in every Training Studio picker.** Existing installs keep their
+  original compose environment forever (image updates don't touch compose), and the
+  native shape only listed models already on disk — so Mistral was invisible almost
+  everywhere. The catalog knowledge now lives in the app: unsealed installs always
+  offer Mistral as "downloads on first train"; sealed installs still hide it
+  (an air-gapped picker must never advertise a base it cannot fetch — the signed
+  bundle carries the weights instead).
+- **Chat answers carry a confidence verdict and a source-conflict flag.** Every answer now
+  shows a deterministic confidence chip (high = a verified known fix matched · medium =
+  grounded in retrieved sources · low = ungrounded), and when two known-fix records
+  prescribe *different fenced verbs* for the same failure signature, the answer is flagged
+  "⚠ sources differ" with both sources named — instead of silently letting one win. The
+  verdict is computed from the grounding, never by the model, so it cannot flatter itself.
+- **Known-fix retrieval ranks by the named workload.** A question naming a specific
+  deployment now retrieves THAT workload's fix records ahead of the generic playbook and
+  ahead of records for adjacent workloads (the name token is the strongest join key).
+- **Adapter-import fix (granite-fatal on fresh volumes).** On a fresh forge volume whose
+  base was already imported by a previous trainer pod, the adapter-only import path died on
+  a missing directory and silently fell back to the merged-GGUF path — which granite's
+  tokenizer cannot survive. One mkdir; the adapter path now holds everywhere.
+- **A 1.6GB lean trainer for small hosts.** `--build-arg BAKE_BASES=0` builds the trainer
+  without the ~19GB of baked base weights; `deploy/airgap/compose.trainer-lean.yml` mounts
+  the signed bundle's models/ directory instead (same weights, on disk once). Verified with
+  a real granite train from mounted bases; published as `vke-trainer:lean`. The stock
+  appliance image is unchanged.
+- **The GPU trainer image is validated on both architectures.** `vke-trainer:cuda` is a
+  multi-arch tag whose arm64 half trained granite on an NVIDIA GB10 (98s) and whose amd64
+  half trained granite on an RTX A6000 (69s) — both through the sidecar + adapter pipeline.
+
 ## 1.6.11 · 2026-08-27
 
 **Granite 4.2 3B replaces SmolLM2 + qwen-1.5 as the bundled brain.** One Apache-2.0 dense

@@ -1,12 +1,12 @@
 {
-  "version": "1.6.11",
+  "version": "1.6.12",
   "date": "2026-08-27",
   "highlights": [
-    "Granite 4.2 3B replaces SmolLM2 + qwen-1.5 as the bundled brain.",
-    "Trained models stop looping.",
-    "Mistral-7B ships in the air-gap bundle.",
-    "Trained-model answers come in three sections.",
-    "① From the training data.",
-    "② Live cluster & learned context."
+    "Export a trained model from the Studio \u2014 adapter + model card, never the base.",
+    "Mistral 7B shows in every Training Studio picker.",
+    "Chat answers carry a confidence verdict and a source-conflict flag.",
+    "Known-fix retrieval ranks by the named workload.",
+    "Adapter-import fix (granite-fatal on fresh volumes).",
+    "A 1.6GB lean trainer for small hosts."
   ]
 }
