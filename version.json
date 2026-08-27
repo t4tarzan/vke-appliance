@@ -1,5 +1,12 @@
 {
   "version": "1.6.11",
   "date": "2026-08-27",
-  "highlights": []
+  "highlights": [
+    "Granite 4.2 3B replaces SmolLM2 + qwen-1.5 as the bundled brain.",
+    "Trained models stop looping.",
+    "Mistral-7B ships in the air-gap bundle.",
+    "Trained-model answers come in three sections.",
+    "① From the training data.",
+    "② Live cluster & learned context."
+  ]
 }
