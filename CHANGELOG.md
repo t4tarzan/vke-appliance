@@ -1,5 +1,20 @@
 # VKE — Changelog
 
+## 1.6.14 · 2026-08-28
+
+- **Structured remediation proposals.** A proposal now carries Why / How / Verify /
+  Reversal — reviewed in its own drawer on Approvals — and an applied fix can be
+  marked as such, closing the loop on the record.
+- **Convert any event into an artifact.** From an event's receipt drawer, one click
+  turns it into a playbook, a runbook, a watchdog alert rule, or a chat preset card —
+  with a coverage panel showing what already covers that signature (or that it's
+  net-new) before you author a duplicate.
+- **A watchdog alert-rule editor on the Alerts page.** Author threshold rules
+  (restarts / phase / ready / reason, per pod or node) right in the console; the
+  hourly sweep honors them.
+- **Authored chat preset cards.** User-authored cards overlay the built-in decks per
+  model. All air-gap-first: every new surface works sealed.
+
 ## 1.6.13 · 2026-08-27
 
 - **The Training Studio picker can no longer contradict the chat model.** Three
