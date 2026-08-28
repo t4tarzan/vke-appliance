@@ -1,5 +1,28 @@
 # VKE — Changelog
 
+## 1.6.19 · 2026-08-28
+
+- **Approvals decide is deterministic — one source of truth.** Deciding a proposal now
+  re-renders the queue from a single fresh fetch, so the decided row reliably leaves
+  Pending and appears under Recent remediation chains with the correct status. The toast
+  reads the authoritative recorded status (applied / denied / failed) instead of the live
+  response — and if the response is lost behind a slow gateway, the app reconciles
+  against the server's recorded status rather than reporting a false failure. Double-
+  clicks are guarded. (Community fix, merged from PR #8.)
+- **Settings that teach.** Every Settings field now carries a compact hint with a
+  concrete example, every toggle states what ON vs OFF results in, each section opens
+  with a one-line "what this controls", and the genuinely risky controls (chat gateway
+  URL + auth, the T0 master switch) are flagged ⚠ high-impact with the consequence
+  spelled out. Integration fields (air-gap channel, RunPod, EKS…) gain per-field hints.
+  (From PR #9.)
+- **Tooltips mode — hover to learn.** A new toggle (sidebar footer + topbar 💡, all
+  roles) turns on themed hover popovers across the console: sidebar navigation, the
+  chrome toggles, the Approvals Apply/Deny buttons, the incident six-step stepper and
+  key Settings fields. Viewport-aware, honors reduced-motion, Esc/scroll dismissal —
+  and OFF leaves the app exactly as before. (From PR #9.)
+- **The guide arc gets its own phasedoc window** (an internal builders' cockpit; not
+  part of the shipped product surface).
+
 ## 1.6.18 · 2026-08-28
 
 - **Chart upgrades no longer crash on `--reuse-values`.** Helm's `--reuse-values` keeps the

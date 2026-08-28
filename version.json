@@ -1,8 +1,10 @@
 {
-  "version": "1.6.18",
+  "version": "1.6.19",
   "date": "2026-08-28",
   "highlights": [
-    "Chart upgrades no longer crash on `--reuse-values`.",
-    "Version sync."
+    "Approvals decide is deterministic \u2014 one source of truth.",
+    "Settings that teach.",
+    "Tooltips mode \u2014 hover to learn.",
+    "The guide arc gets its own phasedoc window"
   ]
 }
