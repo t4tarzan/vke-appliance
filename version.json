@@ -1,8 +1,8 @@
 {
-  "version": "1.6.20",
-  "date": "2026-08-28",
+  "version": "1.6.21",
+  "date": "2026-08-29",
   "highlights": [
-    "The trainer refuses metadata-only model stubs.",
-    "The Studio picker now verifies the catalog against the trainer's disk."
+    "Graduation no longer needs a manual scavenger hunt.",
+    "Watchlist rules are target-aware."
   ]
 }

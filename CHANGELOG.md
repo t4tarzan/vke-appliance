@@ -1,5 +1,21 @@
 # VKE — Changelog
 
+## 1.6.21 · 2026-08-29
+
+- **Graduation no longer needs a manual scavenger hunt.** From a live "why won't my
+  fix auto-remediate" session, four fixes: the Autonomy Board gains a **Replay-verify
+  button** right next to the failing local-verified gate; the **Benchmarks tile now
+  shows for the SRE lead** (it was hidden from the very role driving graduation); the
+  graduation sweep **auto-runs the replay check** for any class that clears the
+  success/rate/fence gates (the gate itself is unchanged — the local model must still
+  reproduce the approved verb blind); and a fully-green, T0-enabled class can no
+  longer freeze at "proving" — the sweep re-runs promotion, so an earned graduation
+  always lands at autonomous.
+- **Watchlist rules are target-aware.** A rule whose fix names a specific workload now
+  fires only when a firing alert of that reason actually references that workload —
+  one workload's rule can no longer remediate every unrelated pod that trips the same
+  generic reason. Reason-only rules behave exactly as before.
+
 ## 1.6.20 · 2026-08-28
 
 - **Postgres installs fixed: approve no longer 500s, the incident chart no longer
