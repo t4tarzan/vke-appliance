@@ -1,9 +1,12 @@
 {
-  "version": "1.6.16",
+  "version": "1.6.17",
   "date": "2026-08-28",
   "highlights": [
-    "One-click per-namespace write access \u2014 frictionless, and safe by construction.",
-    "The action console explains \"forbidden\" honestly.",
-    "Settings \u2192 Cluster write access"
+    "Answers now read like a documentation manual.",
+    "Dataset variants: one upload, many training views.",
+    "The Action Plan replaces browser dialogs.",
+    "The remediation chain on one screen.",
+    "Act outcomes analytics.",
+    "Ask the Database, more intuitive."
   ]
 }

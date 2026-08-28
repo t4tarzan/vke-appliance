@@ -1,5 +1,43 @@
 # VKE — Changelog
 
+## 1.6.17 · 2026-08-28
+
+- **Answers now read like a documentation manual.** Every streamed chat answer renders
+  real formatting — headers, paragraphs, lists, code blocks, bolded Diagnosis/Likely
+  cause/Next step/Fence labels, citation pills — via a small built-in renderer (no
+  external libraries, air-gap-safe). The three-section trained-model answer became
+  properly spaced stacked boxes with the training-data rows as clean cards, and
+  citations became a References block: numbered source cites click through to the
+  highlighted span in the document, known-fix cites list signature, verification and
+  the fix text.
+- **Dataset variants: one upload, many training views.** A record store can now project
+  multiple named training views — pick a different target column, a format
+  (classification · Q&A · instruction), optionally a row filter — each variant is a
+  first-class dataset in every picker and trainable in the Studio; the base view is
+  never touched and every variant creation lands on the event log.
+- **The Action Plan replaces browser dialogs.** Propose-as-fix from chat, every alert's
+  new ⚡ Plan button and the apply flows now open one structured Action Plan box:
+  cluster, fenced action type, target workload from a live dropdown, replicas, a fence
+  preview that shows the namespace's read/write state, then Propose → Approvals or
+  Execute now. No browser prompt/confirm dialogs remain in the fix flows.
+- **The remediation chain on one screen.** Approvals persist their apply outcome; a
+  Recent remediation chains card reads proposed → approved → applied/failed with the
+  outcome note on one line each, and deciding updates the row inline without a reload.
+  Proposals also link their event, so the drawer converts an approved proposal into a
+  reusable playbook in one click.
+- **Act outcomes analytics.** The Analytics page gains an Act panel straight off the
+  event chain: proposals/approved/denied/actions/applied/failed, success rate by
+  signature, the auto-vs-HITL split, and the recent action→outcome trail — the same
+  rows History shows.
+- **Ask the Database, more intuitive.** Suggested questions are derived from each
+  source's real schema and value vocabulary, tables and columns render as clickable
+  chips (low-cardinality columns show their values), and results render as proper
+  striped tables with right-aligned numbers — the visible-SQL receipt stays.
+- **Two navigation bugs fixed.** Every cross-screen navigation was silently rendering
+  twice (killing the alert → Diagnose chat handoff), and the incident trail returned
+  404 for any signature containing a slash. Both fixed; Diagnose now lands its turns
+  on the incident trail reliably.
+
 ## 1.6.16 · 2026-08-28
 
 - **One-click per-namespace write access — frictionless, and safe by construction.**
