@@ -1,5 +1,26 @@
 # VKE — Changelog
 
+## 1.6.20 · 2026-08-28
+
+- **Postgres installs fixed: approve no longer 500s, the incident chart no longer
+  reads empty.** Two SQLite-isms bit DKubeX/Postgres installs — the approval
+  outcome column was never created on Postgres (approve → HTTP 500 with a stuck
+  row, after the fix had already run), and the incident-trail window used
+  SQLite-only date arithmetic (trail → 500 → all-zero sections). Both queries are
+  now portable; existing Postgres installs pick the column up on next start.
+- **The trainer refuses metadata-only model stubs.** A base now counts as on-disk
+  only when its weight shards actually exist — an interrupted download can no
+  longer skip the air-gap guard and then fail at load; connected installs resume
+  the pull, sealed installs get a precise error. (Ships in the CUDA trainer images
+  now; the fat CPU-trainer rebuild with Mistral baked in follows as a
+  trainer-only push.)
+- **The Studio picker now verifies the catalog against the trainer's disk.** A new
+  trainer `GET /bases` endpoint reports which base models are physically present in
+  /models, and the picker reconciles every entry against it — a base the trainer
+  actually has can never again be mislabeled "downloads from HF" by a stale chart or
+  compose environment (the env-lies-about-the-image class, closed at the source).
+  Old trainers without the endpoint fall back to today's behavior.
+
 ## 1.6.19 · 2026-08-28
 
 - **Approvals decide is deterministic — one source of truth.** Deciding a proposal now

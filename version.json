@@ -1,10 +1,8 @@
 {
-  "version": "1.6.19",
+  "version": "1.6.20",
   "date": "2026-08-28",
   "highlights": [
-    "Approvals decide is deterministic \u2014 one source of truth.",
-    "Settings that teach.",
-    "Tooltips mode \u2014 hover to learn.",
-    "The guide arc gets its own phasedoc window"
+    "The trainer refuses metadata-only model stubs.",
+    "The Studio picker now verifies the catalog against the trainer's disk."
   ]
 }
