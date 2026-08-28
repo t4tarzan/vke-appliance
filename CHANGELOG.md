@@ -1,5 +1,16 @@
 # VKE — Changelog
 
+## 1.6.18 · 2026-08-28
+
+- **Chart upgrades no longer crash on `--reuse-values`.** Helm's `--reuse-values` keeps the
+  previous release's values and does not merge new chart defaults, so upgrading an older
+  install to a chart that later gained an optional block (vllm · air-gap · trainer ·
+  persistence) crashed with a nil-pointer at the first template line. Every optional-block
+  toggle is now nil-guarded — the block simply stays off when its values are absent, and the
+  default render is byte-identical. (Community fix, merged from PR #7.)
+- **Version sync.** The application and chart move together again at 1.6.18; there are no
+  application code changes since 1.6.17.
+
 ## 1.6.17 · 2026-08-28
 
 - **Answers now read like a documentation manual.** Every streamed chat answer renders

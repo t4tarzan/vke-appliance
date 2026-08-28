@@ -1,12 +1,8 @@
 {
-  "version": "1.6.17",
+  "version": "1.6.18",
   "date": "2026-08-28",
   "highlights": [
-    "Answers now read like a documentation manual.",
-    "Dataset variants: one upload, many training views.",
-    "The Action Plan replaces browser dialogs.",
-    "The remediation chain on one screen.",
-    "Act outcomes analytics.",
-    "Ask the Database, more intuitive."
+    "Chart upgrades no longer crash on `--reuse-values`.",
+    "Version sync."
   ]
 }
