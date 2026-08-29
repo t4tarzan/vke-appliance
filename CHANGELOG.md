@@ -1,5 +1,24 @@
 # VKE — Changelog
 
+## 1.6.22 · 2026-08-29
+
+- **The fast watchdog can no longer be frozen by a stale proposal.** A single pending
+  HITL approval for a signature used to block that watch rule's ENTIRE auto path on
+  every fast sweep — auto-fixes appeared only ~hourly. The pending-dedup now gates
+  only the propose branch; an armed auto rule fires regardless (all safety gates —
+  fence, master switch, circuit breaker — unchanged) and an autonomous apply
+  supersedes any stale pending proposal so it can never re-freeze autonomy or be
+  double-applied later.
+- **History and the incident trail stay live between hourly sweeps.** The fast (300s)
+  watchdog cycle now records the observation snapshot and one incident per firing
+  alert — deduped per signature within the window — so a new failure surfaces within
+  one fast tick instead of up to an hour, with no event-log spam.
+- **A unified CUDA trainer image joins the build set.** One CUDA-torch trainer that
+  uses a GPU when present and falls back cleanly to CPU, with the full five-model
+  air-gap bake, a resilient retrying downloader, and a byte-completeness validator
+  for the baked weights. Additive: the existing CPU and CUDA Dockerfiles are
+  untouched this release.
+
 ## 1.6.21 · 2026-08-29
 
 - **Graduation no longer needs a manual scavenger hunt.** From a live "why won't my

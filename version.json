@@ -1,8 +1,9 @@
 {
-  "version": "1.6.21",
+  "version": "1.6.22",
   "date": "2026-08-29",
   "highlights": [
-    "Graduation no longer needs a manual scavenger hunt.",
-    "Watchlist rules are target-aware."
+    "The fast watchdog can no longer be frozen by a stale proposal.",
+    "History and the incident trail stay live between hourly sweeps.",
+    "A unified CUDA trainer image joins the build set."
   ]
 }
