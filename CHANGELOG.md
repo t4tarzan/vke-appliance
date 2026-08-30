@@ -1,5 +1,22 @@
 # VKE — Changelog
 
+## 1.6.23 · 2026-08-30
+
+- **One image fault, one signature.** `ErrImagePull` now folds into `ImagePullBackOff`
+  at the reason-canonicalization layer — a broken image oscillates between the two
+  kubelet phases, and a fix graduated on one phase could never auto-fire while the pod
+  sat in the other (the second independent cause of "intermittent autofix"). The raw
+  kubelet reason still shows in the alert detail.
+- **The trainer's memory gate reads the honest number on unified-memory GPUs.** On
+  Grace-Blackwell/GB10-class parts, CUDA's "free" collapses after any big file read
+  because page cache counts against it — refusing runs that would fit fine. The
+  preflight now sizes against the kernel's MemAvailable (capped by device total) on
+  unified parts only; discrete cards and the refuse-not-OOM stance are unchanged — a
+  genuinely busy box still refuses cleanly.
+- **Trainer images updated by overlay.** `vke-trainer:1.6.23` and `cuda-1.6.23` carry
+  the new gate as a single small layer on the existing five-model bakes — no re-bake,
+  same baked weights.
+
 ## 1.6.22 · 2026-08-29
 
 - **The fast watchdog can no longer be frozen by a stale proposal.** A single pending

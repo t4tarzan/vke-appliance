@@ -1,9 +1,9 @@
 {
-  "version": "1.6.22",
-  "date": "2026-08-29",
+  "version": "1.6.23",
+  "date": "2026-08-30",
   "highlights": [
-    "The fast watchdog can no longer be frozen by a stale proposal.",
-    "History and the incident trail stay live between hourly sweeps.",
-    "A unified CUDA trainer image joins the build set."
+    "One image fault, one signature.",
+    "The trainer's memory gate reads the honest number on unified-memory GPUs.",
+    "Trainer images updated by overlay."
   ]
 }
