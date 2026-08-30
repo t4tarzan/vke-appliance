@@ -1,5 +1,16 @@
 # VKE — Changelog
 
+## 1.6.26 · 2026-08-30
+
+- **Rollouts no longer hang on base-path installs.** The readiness probe hits the
+  container port at the root, but under a base path the app only answered
+  `/<base>/readyz` — so a chart pointing readiness at `/readyz` left the pod
+  not-Ready forever. `/readyz` now answers at the root too, exactly as `/health`
+  always has.
+- **Postgres installs no longer grow an empty snapshots directory.** Listing backups
+  on a Postgres-backed install returns cleanly without creating litter beside a
+  database file that does not exist.
+
 ## 1.6.25 · 2026-08-30
 
 - **Ask the Database now works on Postgres installs.** The tile hard-opened the SQLite

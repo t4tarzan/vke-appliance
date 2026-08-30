@@ -1,10 +1,8 @@
 {
-  "version": "1.6.25",
+  "version": "1.6.26",
   "date": "2026-08-30",
   "highlights": [
-    "Ask the Database now works on Postgres installs.",
-    "A pod with an unreachable database no longer reports Ready.",
-    "The data volume survives uninstall/reinstall.",
-    "Real snapshots of the datastore."
+    "Rollouts no longer hang on base-path installs.",
+    "Postgres installs no longer grow an empty snapshots directory."
   ]
 }
