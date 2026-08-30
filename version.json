@@ -1,8 +1,9 @@
 {
-  "version": "1.6.26",
+  "version": "1.6.27",
   "date": "2026-08-30",
   "highlights": [
-    "Rollouts no longer hang on base-path installs.",
-    "Postgres installs no longer grow an empty snapshots directory."
+    "ONE trainer lineage: the unified image ships.",
+    "A lean variant for clusters:",
+    "Heads-up for auto-updating appliances:"
   ]
 }

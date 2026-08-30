@@ -1,5 +1,22 @@
 # VKE — Changelog
 
+## 1.6.27 · 2026-08-30
+
+- **ONE trainer lineage: the unified image ships.** `vke-trainer:1.6.27` (and `latest`)
+  is now the unified build — CUDA-torch that uses a GPU when present and falls back
+  cleanly to CPU, with the full five-model air-gap bake. The "is this tag CUDA?"
+  ambiguity is over: `cuda` and `cuda-1.6.27` alias the same image for one release of
+  overlap, then the separate CUDA lineage retires.
+- **A lean variant for clusters:** `vke-trainer:1.6.27-lean` (and `lean`) — the same
+  unified build without the baked models (~3GB vs ~26GB), for Kubernetes installs that
+  seed `/models` from a volume (the DGX pattern) and for small-disk hosts.
+- **Heads-up for auto-updating appliances:** `latest` moving onto the unified fat
+  lineage means the next watchtower update pulls a ~26GB trainer image. Pin the
+  trainer tag first if that is unwelcome on your link or disk.
+- Build fold-in: `bin/build-trainer-unified.sh` makes the two-variant, two-arch build
+  reproducible (native arm64 with stream-to-registry; the amd64 half on any rented
+  x86 box via `AMD64_BUILDER`).
+
 ## 1.6.26 · 2026-08-30
 
 - **Rollouts no longer hang on base-path installs.** The readiness probe hits the
