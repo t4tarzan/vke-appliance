@@ -1,9 +1,9 @@
 {
-  "version": "1.6.23",
+  "version": "1.6.24",
   "date": "2026-08-30",
   "highlights": [
-    "One image fault, one signature.",
-    "The trainer's memory gate reads the honest number on unified-memory GPUs.",
-    "Trainer images updated by overlay."
+    "The audit chain can no longer fork \u2014 and a fork is no longer called tampering.",
+    "The trainer finally trains on the answer, not the question.",
+    "Trainer images `1.6.24` and `cuda-1.6.24` ship these as overlays"
   ]
 }

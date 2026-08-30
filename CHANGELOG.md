@@ -1,5 +1,26 @@
 # VKE — Changelog
 
+## 1.6.24 · 2026-08-30
+
+- **The audit chain can no longer fork — and a fork is no longer called tampering.**
+  Concurrent writers (the scheduler racing an HTTP request, sync racing the async
+  batch writer) could fork the hash chain, and one benign fork made the whole ledger
+  read as BROKEN. All event writes are now serialized behind one lock with write-time
+  timestamps, and the verifier separates **altered** (a row failing its own hash — the
+  real tamper signal, no longer cascading) from **forks** (a historical concurrency
+  artifact; nothing edited). The Trust Center shows three states: green intact, amber
+  unaltered-with-historical-forks, coral only for genuine alteration. Proven with a
+  7-thread stress: 840 concurrent events, zero forks, zero drops.
+- **The trainer finally trains on the answer, not the question.** `mask_prompt` — in
+  every job spec since the MLX trainer — was a no-op on the shipping CUDA/CPU trainer:
+  ~70% of every sequence was gradient on the persona and the user's question. Labels
+  now cover only the assistant turn. The trainer also keeps the **best** iterate by
+  validation loss (with early stopping) instead of always shipping the last, evaluates
+  on the whole valid split, and datasets **split before padding** so tiny corpora no
+  longer leak training rows into validation.
+- **Trainer images `1.6.24` and `cuda-1.6.24` ship these as overlays** on the existing
+  five-model bakes — same baked weights, no re-download for layer-deduped pulls.
+
 ## 1.6.23 · 2026-08-30
 
 - **One image fault, one signature.** `ErrImagePull` now folds into `ImagePullBackOff`
