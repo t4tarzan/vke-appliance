@@ -1,5 +1,29 @@
 # VKE — Changelog
 
+## 1.6.25 · 2026-08-30
+
+- **Ask the Database now works on Postgres installs.** The tile hard-opened the SQLite
+  path and returned a 500 on every Postgres-backed deployment. It now follows the
+  backend the app actually runs: SQLite keeps the engine-level authorizer; Postgres
+  introspects the schema over the app's own connection behind a four-layer in-process
+  fence (comment-stripped statement validation, a fail-closed table allowlist, a
+  genuinely read-only transaction, a statement timeout) — honestly documented as
+  weaker than an authorizer, with a clamped row limit that caps the model's LIMIT but
+  never raises it.
+- **A pod with an unreachable database no longer reports Ready.** New `/readyz` probe
+  touches the datastore; liveness stays database-free on purpose, so a store outage
+  pulls the pod from the service instead of restarting it in a loop.
+- **The data volume survives uninstall/reinstall.** The chart's claim is annotated
+  `helm.sh/resource-policy: keep` — the event chain, knowledge base, approvals and
+  identity are a system of record, not scratch. Reclaiming the disk now takes an
+  explicit `kubectl delete pvc`. New installs get 8Gi; existing claims keep their size.
+- **Real snapshots of the datastore.** `VACUUM INTO` copies of the live database with
+  manifests recording checksums and every stream's chain head — so a restore can prove
+  it restored everything, not merely something valid. Admin endpoints + a daily job;
+  restore stays a documented operator procedure, never an API.
+- Also: the `default` workspace now seeds on Postgres, and the event stream-head lookup
+  gained the index its every-append hot path deserved.
+
 ## 1.6.24 · 2026-08-30
 
 - **The audit chain can no longer fork — and a fork is no longer called tampering.**
