@@ -1,5 +1,30 @@
 # VKE — Changelog
 
+## 1.6.31 · 2026-08-31
+
+- **A lost datastore no longer means lost fix-classes.** The event chain is the durable
+  record and `kb_fix` is an index over it, but nothing could rebuild one from the other — so
+  a reinstall that took the volume with it left the Autonomy Board and Knowledge Base empty
+  for good, while alerts and incidents regenerated and made the loss look partial.
+  **Rebuild from the event chain** (Autonomy Board, admin only) recomputes the classes from
+  the recorded outcomes: counters, the fix, and the status they imply. It previews before it
+  writes. Validated against a live install's chain — 87 outcome events reproduced all 11
+  existing classes exactly, creating none and updating eleven.
+- **A rebuild deliberately does not restore consent.** `enabled_t0` and
+  `local_model_verified` are never replayed: losing a database must not silently re-arm
+  unattended action, so a class comes back at T1 with three of five gates green, waiting for
+  a human to tick **enable T0** again. Both are now recorded on the chain (`t0_enable`,
+  `t0_revoke`, `t0_verify`), so the original decision stays auditable — this refuses to act
+  on it, it does not lose it. `set_t0` also records *who*.
+- **Admin-only row deletes** on the Autonomy Board and the Approvals queue. Neither touches
+  the chain: a deleted fix-class is recoverable with Rebuild, and a deleted approval keeps
+  its proposal/approval/action/outcome events, so the incident trail still reads correctly.
+  Deleting a fix-class also drops its per-signature breaker override.
+- **History has no delete, by design.** The event chain is hash-linked, and a hole in it is
+  indistinguishable from tampering — which is the property `/v1/events/verify` exists to
+  check.
+
+
 ## 1.6.30 · 2026-08-31
 
 - **Finetuning a Mistral base dropped every single row.** A run on Mistral-7B-Instruct-v0.3

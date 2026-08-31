@@ -1,7 +1,10 @@
 {
-  "version": "1.6.30",
+  "version": "1.6.31",
   "date": "2026-08-31",
   "highlights": [
-    "Finetuning a Mistral base dropped every single row."
+    "A lost datastore no longer means lost fix-classes.",
+    "A rebuild deliberately does not restore consent.",
+    "Admin-only row deletes",
+    "History has no delete, by design."
   ]
 }
