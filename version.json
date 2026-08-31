@@ -1,9 +1,12 @@
 {
-  "version": "1.6.27",
-  "date": "2026-08-30",
+  "version": "1.6.28",
+  "date": "2026-08-31",
   "highlights": [
-    "ONE trainer lineage: the unified image ships.",
-    "A lean variant for clusters:",
-    "Heads-up for auto-updating appliances:"
+    "Settings \u2192 Updates works again on a modern Docker.",
+    "A macOS resource fork no longer empties the Training Studio.",
+    "The Analytics tab's Act panel worked on the appliance and 500'd on DKubeX.",
+    "Operators were told every namespace is read-only.",
+    "Analytics told ml_engineer and demo there was nothing pending.",
+    "\"Run daily audit\" no longer claims to have run."
   ]
 }

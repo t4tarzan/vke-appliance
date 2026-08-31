@@ -1,5 +1,94 @@
 # VKE — Changelog
 
+## 1.6.28 · 2026-08-31
+
+- **Settings → Updates works again on a modern Docker.** The appliance's update engine
+  was `containrrr/watchtower`, unmaintained since 2023 and still negotiating Docker API
+  1.25 — every daemon >= 25 refuses it ("client version 1.25 is too old. Minimum
+  supported API version is 1.40"), so it died on its first scan and the Update button
+  could never do anything. Replaced with the maintained fork, pinned:
+  `ghcr.io/nicholas-fedor/watchtower:1.21.0` (amd64 + arm64, same enable label, same
+  env). The trigger is now a POST — the fork answers 405 to the GET the app used to
+  send, while containrrr checked no method at all, so the call suits both. Note that
+  1.6.27's "the next watchtower update pulls a ~26GB trainer image" could not actually
+  have happened on a current daemon: nothing was updating.
+- **A macOS resource fork no longer empties the Training Studio.** `._name.jsonl`
+  siblings are not UTF-8; landing one in the dataset directory — via a Mac-authored
+  air-gap bundle or `VKE_EXTRA_DATASETS` — raised `UnicodeDecodeError` inside the
+  dataset listing and took the whole list down with it. Dotfiles are now skipped both
+  where datasets are listed and where they are seeded onto the volume.
+- **The Analytics tab's Act panel worked on the appliance and 500'd on DKubeX.** The
+  reported half of dkubeio/vke#4 (`/v1/analytics`, `json_extract`) was fixed in 1.6.7, but
+  the tab calls a second endpoint, and `/v1/analytics/act` still failed on every
+  Postgres-backed install: `function datetime(unknown, unknown) does not exist`. The
+  window was passed as a bound PARAMETER — `datetime('now', ?)` — and db.py's Postgres
+  shim rewrites `datetime('now','-N days')` by regex, so a value hidden inside a parameter
+  is invisible to it and the SQLite call reached Postgres raw. It is now the literal form
+  the shim can see, which is why the same window in `reports.py` and `factory/data.py`
+  never broke. Verified on a live Postgres install: 233 rows across all five event kinds
+  where the shipped query raised.
+- **Operators were told every namespace is read-only.** `GET /v1/rbac/write` — a
+  read of what the cluster already allows — was gated at sre_lead, so it 403'd for
+  operator, ml_engineer, exec and demo. Neither caller treats that as an error, so the
+  failure was silent and wrong in two places: every Workloads card fell back to the
+  "structurally read-only" chip regardless of the real grant, and the Action Console
+  dropped its read-only warning entirely while still offering Execute to operators —
+  the one role most likely to press it, now with no hint the API server would refuse.
+  The status read is open to observers; flipping a grant stays admin/sre_lead on the
+  POST. The workload chip stays truthful for everyone and is only clickable for the
+  roles that can actually flip it.
+- **Analytics told ml_engineer and demo there was nothing pending.** The page's "open
+  improvement proposals" panel reads `/v1/approvals?status=pending`, gated at
+  sre_lead/operator/exec — but Analytics is a deliberate view for ml_engineer and demo,
+  so for them the call 403'd and the panel rendered its EMPTY branch, "no open proposals
+  — nothing pending", however many were queued. Both that read and the proposal drawer
+  behind each row are open to observers now; deciding an approval and marking one
+  applied remain sre_lead/admin, and the drawer no longer offers a Mark-applied button
+  to roles that cannot use it.
+- **Operators can execute in the Action Console again — the button was never wired to a
+  gate they could pass.** `POST /v1/actions/execute` was `APPROVERS`, while the console
+  has always rendered "Execute now (logged)" for operator; pressing it 403'd, and the
+  handler then matched "forbidden" against the app's own error and offered a
+  fenced-write grant — diagnosing a role refusal as a namespace-RBAC one, and proposing
+  a remedy that role could not apply either. The gate is now sre_lead + operator. The
+  fence is untouched and is what keeps this safe: allowed kinds only, a replica cap, no
+  delete route exists at all, every call on the event chain, and the cluster's own RBAC
+  still decides per namespace. Approving and granting write remain sre_lead/admin.
+- **"Run daily audit" no longer claims to have run.** `POST /v1/agentloop/run` is
+  sre_lead/ml_engineer, but Reports offered the button to operator and exec, whose 403
+  was swallowed — the toast said "Running daily audit…", the screen re-rendered, and
+  nothing had happened. The button is now rendered only for roles that can use it, and
+  a refusal is reported instead of being discarded.
+- Found by sweeping every role × screen × endpoint the console can reach rather than by
+  chasing reports — following helper calls, drawer kinds and onclick handlers, and
+  separating a silent render-time 403 from a failed click: 4 render-time and 1
+  actionable click-time blockage existed, 0 remain.
+- **You choose what a flapping fix-class costs.** The T0 circuit breaker demoted on
+  flap — status to `demoted`, and the `enabled_t0` opt-in cleared, which is an automatic
+  process erasing the one graduation gate a human owns. The threshold also counts FIRES,
+  not failures, so three *successful* remediations of one signature in 30 minutes demote a
+  fix-class for doing its job. The Autonomy Board's policy card now carries **When it
+  trips**: `demote` (the default — nothing changes for an install that ignores this),
+  `pause` (skip the auto-fire and propose to a human for the rest of the window, leaving
+  the tier and the opt-in alone) or `off`. Settings → Agent loop & autonomy mirrors it
+  read-only, exactly as it already does for the T0 master switch.
+- **A demotion is no longer silent.** `policy.py` wrote no events at all, so a fix-class
+  dropping out of autonomy reached History, the event chain, Analytics and Telegram
+  nowhere. Every demotion — breaker or regression — now appends `t0_demote` with its
+  reason, and a demoted row on the board says what tripped it, when, and how to put it
+  back.
+- **The Autonomy Board's `successes` chip stops reading like a fraction.** It showed
+  `4/3` one line under the row's `4/4 success` — but the row is successes/attempts while
+  the chip is successes against the threshold of 3, so the same `x/y` shape meant two
+  different things side by side. The chip now reads `4 · need 3`, and every gate chip
+  carries a hover explaining what it actually measures — including that a failure stays
+  in the success-rate denominator permanently, which is what raises the bar from three
+  successes to nine.
+- **The two auto-fire lanes agree on what a trip means.** The watchlist sweep and
+  `can_autofire()` each counted the same in-memory fire log separately, and disagreed:
+  one skipped a tick, the other demoted permanently. They now share
+  `policy.breaker_tripped()`, and `off` disables the breaker on both.
+
 ## 1.6.27 · 2026-08-30
 
 - **ONE trainer lineage: the unified image ships.** `vke-trainer:1.6.27` (and `latest`)
