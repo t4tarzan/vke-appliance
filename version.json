@@ -1,12 +1,8 @@
 {
-  "version": "1.6.28",
+  "version": "1.6.29",
   "date": "2026-08-31",
   "highlights": [
-    "Settings \u2192 Updates works again on a modern Docker.",
-    "A macOS resource fork no longer empties the Training Studio.",
-    "The Analytics tab's Act panel worked on the appliance and 500'd on DKubeX.",
-    "Operators were told every namespace is read-only.",
-    "Analytics told ml_engineer and demo there was nothing pending.",
-    "\"Run daily audit\" no longer claims to have run."
+    "The flap breaker can be set per fix-class, not just board-wide.",
+    "The Replay-verify hint follows the tooltips convention."
   ]
 }

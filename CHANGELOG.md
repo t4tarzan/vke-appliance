@@ -1,5 +1,25 @@
 # VKE — Changelog
 
+## 1.6.29 · 2026-08-31
+
+- **The flap breaker can be set per fix-class, not just board-wide.** Each row on the
+  Autonomy Board gains its own `inherit · demote · pause · off`, sitting beside
+  `enable T0` with the other per-class controls. `inherit` is the default and follows the
+  board, so nothing moves for an install that ignores this. The case it exists for: a demo
+  induces a failure on purpose, the autonomous fix restarts it repeatedly, and the breaker
+  demotes mid-demo — now that one class can be set `off` without unguarding every other
+  autonomous class on the cluster. Overrides work in both directions: flip the board to
+  `off` for a demo and a class pinned to `demote` stays protected.
+  Keyed on the SIGNATURE rather than the kb_fix row, because the watchlist lane fires by
+  signature and has no kb_fix row — a row-keyed override would silently have missed the
+  one lane whose 300s cadence can actually trip the breaker (three fires take ~10min
+  there, ~3h on the hourly lane). An override is sticky and shows as an amber badge on the
+  row, so a demo left switched off is visible on the board rather than forgotten.
+- **The Replay-verify hint follows the tooltips convention.** The button's five-sentence
+  explanation moved from a native browser title to `data-tip`, so it appears only in
+  💡 Tooltips mode — and now says plainly that a blind replay deriving the same verb is
+  agreement with the ACTION, not evidence the action resolves the incident.
+
 ## 1.6.28 · 2026-08-31
 
 - **Settings → Updates works again on a modern Docker.** The appliance's update engine
