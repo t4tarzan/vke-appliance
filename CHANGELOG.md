@@ -1,5 +1,31 @@
 # VKE — Changelog
 
+## 1.6.32 · 2026-08-31
+
+- **The liveness probe restarted pods that were merely busy.** Intermittent
+  `Liveness probe failed: context deadline exceeded` and the same on readiness — on a
+  handler that returns a literal and touches nothing. Both probe endpoints were sync
+  `def`, so they ran in anyio's threadpool: 40 slots, shared with every other sync handler
+  in this single-process app, and held for the duration of each `kubectl` subprocess or
+  gateway call (`gateway.py` timeout=300, `modelhub` timeout=900). Past 40 concurrent
+  blockers a handler that does nothing still waits behind the queue. Measured in a live
+  pod: 39 blockers answered in 1.7ms, 45 never answered inside the probe's 5s, and the
+  kubelet restarted a healthy pod. `/health` is `async def` now — on the event loop it
+  cannot queue: 60 blockers, 0.8ms.
+- Both copies are fixed. On a base-path install the kubelet reaches the OUTER
+  `_root_health`, not the inner `health()` — patching only the inner one looks right in a
+  diff and changes nothing in production.
+- `readyz` stays sync **on purpose**: it runs `SELECT 1`, and an app with no free threads
+  genuinely is not ready. Readiness pulling a busy pod out of the service is the correct
+  response to saturation; liveness restarting it and killing in-flight work is not.
+- Liveness is also slower to conclude — `timeoutSeconds` 5 → 10 and `failureThreshold` 6,
+  so a minute of silence is required before a restart rather than fifteen seconds.
+- `bin/probe-starvation-ab.sh` reproduces it inside a live pod, on spare ports, against
+  throwaway databases with the agent loop off. It asserts its own preconditions because
+  three separate mistakes produced confident, meaningless numbers while this was being
+  diagnosed: patching the unreachable handler, a blocker that 404'd behind the StaticFiles
+  mount, and a stale listener from an earlier run silently serving the old build.
+
 ## 1.6.31 · 2026-08-31
 
 - **A lost datastore no longer means lost fix-classes.** The event chain is the durable
@@ -23,7 +49,6 @@
 - **History has no delete, by design.** The event chain is hash-linked, and a hole in it is
   indistinguishable from tampering — which is the property `/v1/events/verify` exists to
   check.
-
 
 ## 1.6.30 · 2026-08-31
 
@@ -585,7 +610,6 @@ strong general model writes the SELECT while the receipt still names it.
   container's ephemeral overlay, so uploads and ingested runbooks were lost on every
   pod restart.
 
-
 ## 1.6.7 · 2026-08-25
 
 - **Four screens returned 500 on every Postgres-backed install.** All four were SQLite
@@ -605,7 +629,6 @@ strong general model writes the SELECT while the receipt still names it.
   Audited the four other `ORDER BY id` sites: those query tables that genuinely declare an
   id column, and are unaffected.
 
-
 ## 1.6.6 · 2026-08-25
 
 - **The Compute picker says whether you are training on CPU or GPU.** It offered only
@@ -616,7 +639,6 @@ strong general model writes the SELECT while the receipt still names it.
   `/health`, with a line underneath spelling out what that means: slower runs and possible
   refusals on CPU, roughly an order of magnitude faster on GPU. An older trainer that does
   not report a device is treated as CPU.
-
 
 ## 1.6.5 · 2026-08-25
 
@@ -640,7 +662,6 @@ strong general model writes the SELECT while the receipt still names it.
   corpus (seeded training, identical curves) were presented as an improvement that had not
   happened. They now report the percentage when it improved, plainly that it did not when it
   got worse, and that there is nothing to compare when both runs used the same corpus.
-
 
 ## 1.6.4 · 2026-08-25
 
@@ -680,7 +701,6 @@ strong general model writes the SELECT while the receipt still names it.
   natural bound and a co-located trainer reads the shared claim anyway.
 - **The app store advertised roughly half the storage VKE claims** — 31Gi against an actual
   61Gi. Corrected, along with the memory recommendation.
-
 
 ## 1.6.3 · 2026-08-25
 
@@ -727,7 +747,6 @@ strong general model writes the SELECT while the receipt still names it.
 - **The GGUF converter path is no longer hardcoded** to `/app`, so the trainer can run outside
   its own container layout.
 
-
 ## 1.6.2 · 2026-08-25
 
 - **Every bundled base can actually be fine-tuned now.** `train_lora.py` loaded the base in
@@ -765,7 +784,6 @@ strong general model writes the SELECT while the receipt still names it.
   run's loss curve on screen under the new job's name (`ft1` displayed `k8s-sre`'s curve),
   polling gives up on an unrecoverable run instead of spinning forever, and a refused launch
   says why.
-
 
 ## 1.6.1 · 2026-08-25
 

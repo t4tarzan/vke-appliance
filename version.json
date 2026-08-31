@@ -1,10 +1,7 @@
 {
-  "version": "1.6.31",
+  "version": "1.6.32",
   "date": "2026-08-31",
   "highlights": [
-    "A lost datastore no longer means lost fix-classes.",
-    "A rebuild deliberately does not restore consent.",
-    "Admin-only row deletes",
-    "History has no delete, by design."
+    "The liveness probe restarted pods that were merely busy."
   ]
 }
