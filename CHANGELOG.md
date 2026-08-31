@@ -1,5 +1,25 @@
 # VKE — Changelog
 
+## 1.6.30 · 2026-08-31
+
+- **Finetuning a Mistral base dropped every single row.** A run on Mistral-7B-Instruct-v0.3
+  ended with `every training row's answer exceeded max_seq_length — nothing to train on`,
+  8000 of 8000 train rows and 2000 of 2000 valid rows discarded — on a dataset whose rows
+  are 88 tokens against a 1024 limit, so the advice to raise the limit could never have
+  helped. The prompt-masking added with `mask_prompt` measured the prompt by rendering it
+  SEPARATELY and assuming that render is a token prefix of the full one. Mistral's template
+  breaks that assumption in both directions at once: it drops the system turn from the full
+  render while merging it into the prompt render, so the "prompt" tokenised **longer than
+  the entire sequence** (56 vs 41 on a real row), every label became -100, and each row
+  looked over-length. The answer span is now located by character offset inside the one
+  string that is actually tokenised, which needs no assumption about renders at all.
+  Verified across all five bundled bases: Mistral goes 0/200 → 200/200 rows kept, and
+  Llama, Qwen, gemma and granite label byte-identically to before.
+- The drop message no longer misattributes the cause: it says how many dropped rows really
+  do exceed `max_seq_length`, and says so when none of them do. A template that rewrites the
+  assistant content now trains on the full sequence with a warning rather than discarding
+  the row, and a base whose template drops the system turn says so once.
+
 ## 1.6.29 · 2026-08-31
 
 - **The flap breaker can be set per fix-class, not just board-wide.** Each row on the

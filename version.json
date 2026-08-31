@@ -1,8 +1,7 @@
 {
-  "version": "1.6.29",
+  "version": "1.6.30",
   "date": "2026-08-31",
   "highlights": [
-    "The flap breaker can be set per fix-class, not just board-wide.",
-    "The Replay-verify hint follows the tooltips convention."
+    "Finetuning a Mistral base dropped every single row."
   ]
 }
