@@ -1,7 +1,8 @@
 {
-  "version": "1.6.32",
-  "date": "2026-08-31",
+  "version": "1.6.33",
+  "date": "2026-09-01",
   "highlights": [
-    "The liveness probe restarted pods that were merely busy."
+    "The Autonomy Board's row controls stop dwarfing the row.",
+    "Nothing on that page depends on a browser dialog any more."
   ]
 }

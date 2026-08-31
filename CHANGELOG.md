@@ -1,5 +1,18 @@
 # VKE — Changelog
 
+## 1.6.33 · 2026-09-01
+
+- **The Autonomy Board's row controls stop dwarfing the row.** enable T0, the breaker
+  select, Replay-verify and Delete were a four-deep right-hand stack taller than the
+  fix-class they belong to. They are a two-column grid now — enable T0 and breaker on one
+  line, Replay-verify and Delete beneath — collapsing to one column on narrow screens.
+- **Nothing on that page depends on a browser dialog any more.** Rebuild used `confirm()`,
+  which is unstyled, blocks the tab, and cannot show what the preview actually says. It now
+  reads the chain, renders the preview in place — outcomes counted, classes to create and
+  update, and the warning that consent and replay-verification are not restored — and
+  offers Cancel / Rebuild now inline. Delete asks in the row the same way, and issues no
+  request until it is confirmed.
+
 ## 1.6.32 · 2026-08-31
 
 - **The liveness probe restarted pods that were merely busy.** Intermittent
