@@ -1,5 +1,34 @@
 # VKE — Changelog
 
+## 1.6.38 · 2026-09-01
+
+- **The K8s Field Guide — bundled generic operational knowledge.** 40 authored,
+  synthetic-but-technically-true cards (`data/field-guide.jsonl`, generator
+  `bin/gen-field-guide.py`) covering restarts/rollouts, scaling, scheduling & node selection,
+  namespace/port/DNS/ingress wiring, RBAC & access increments, storage, probes & sizing — each
+  fence-aware. Consumed three ways from one file: a DETERMINISTIC retrieval lane
+  (`backend/kbguide.py`, works on every shape incl. sealed/no-embeddings installs), a rag2
+  semantic collection where embeddings exist (boot-seeded, fail-soft), and the
+  **field-guide-qa dataset** (99 Q/A rows + refusals) in the Studio picker — whose card records
+  store is queryable through **Ask the Database**.
+- **§②/§③ enhanced, not restructured:** §② gains a "📚 from the field guide" block; §③'s
+  assessment gains Supported-by and — when no cluster fix exists yet — a clearly-labeled
+  generic recommended fix from the guide, so the agent reasons instead of drying up. Guide
+  support earns +8 confidence, deliberately below any cluster-verified weight.
+- **Default sre-history training runs now fold the guide in** (99 rows at prepare-time;
+  the corpus-growth counter still measures real history only) — the cluster's own incidents
+  teach the facts, the guide teaches the causal reasoning.
+- **Native trainer now RESUMES like the container one:** forge passes
+  `--resume-adapter-file` when a job's adapter exists — the Studio's `resumes: true` estimate
+  was already promising v2-on-v1 continuation; the native MLX path now honors it.
+- Question stop-words extended (no more "no failing pod matches 'happened'").
+- **Efficacy proven, multi-iteration (the reinforcement-style requirement):** a held-out
+  10-question exam (paraphrases, none in training) against Qwen2.5-0.5B — base **0.30** →
+  after one field-guide-qa run **0.50** → after a SECOND run of the same job (adapter
+  RESUMED, weights carried: train loss started at 0.028 not ~3.5, val 1.013→0.978) **0.80**.
+  Monotonic. `bin/guide-efficacy.py` reproduces it end-to-end through the product's own
+  launch flow.
+
 ## 1.6.37 · 2026-09-01
 
 - **Open reason vocabulary for fix retrieval.** `signals_in`'s reason list was a closed tuple, so a

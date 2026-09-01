@@ -1,8 +1,11 @@
 {
-  "version": "1.6.37",
+  "version": "1.6.38",
   "date": "2026-09-01",
   "highlights": [
-    "Open reason vocabulary for fix retrieval.",
-    "Trainer floating tags repaired + versioned."
+    "The K8s Field Guide \u2014 bundled generic operational knowledge.",
+    "\u00a7\u2461/\u00a7\u2462 enhanced, not restructured:",
+    "Default sre-history training runs now fold the guide in",
+    "Native trainer now RESUMES like the container one:",
+    "Efficacy proven, multi-iteration (the reinforcement-style requirement):"
   ]
 }
