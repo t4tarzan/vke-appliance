@@ -1,5 +1,15 @@
 # VKE — Changelog
 
+## 1.6.40 · 2026-09-01
+
+- **Field-verified knowledge promoted to the bundle.** The `pod:UnexpectedAdmissionError`
+  fix (GPU/extended-resource admission failure — the unit already held, or the device plugin
+  re-registering after a node restart) joins the bundled fix corpus as row 14, verified from
+  boot on every install. It earned its place the product's own way in one day: surfaced as a
+  knowledge gap → distilled → corrected against the real cause → human-verified on a live
+  cluster. The generator gained an AUTHORED section for exactly this promotion path; training
+  dataset and sanitization unchanged (zero-leak sweep clean).
+
 ## 1.6.39 · 2026-09-01
 
 - **The training lineage layer (five extensions, answer path untouched).** ① **Lineage lock**
