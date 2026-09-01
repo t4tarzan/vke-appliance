@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>VKE — the Virtual Kubernetes Engineer</title>
 <meta name="description" content="A self-improving SRE platform: it observes your cluster, fixes what breaks with human oversight, and trains its own local models on your incident history — getting measurably better every day.">
-<link rel="icon" href="public/icon.svg" type="image/svg+xml">
+<link rel="icon" href="/public/icon.svg" type="image/svg+xml">
 <style>
   :root{
     --milk:#F4F6F9; --paper:#FFFFFF; --ink:#131A24; --body:#293341;
@@ -83,8 +83,8 @@
   <span class="name"><svg viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#1E5AA8"/><circle cx="16" cy="16" r="7.5" stroke="#EAF1FA" stroke-width="1.8"/><circle cx="16" cy="16" r="2.4" fill="#EAF1FA"/><path d="M16 8.5v-3M16 26.5v-3M23.5 16h3M5.5 16h3M21.3 10.7l2.1-2.1M8.6 23.4l2.1-2.1M21.3 21.3l2.1 2.1M8.6 8.6l2.1 2.1" stroke="#EAF1FA" stroke-width="1.8" stroke-linecap="round"/></svg>VKE</span>
   <div class="links">
     <a href="#problem">The problem</a><a href="#product">The engineer</a><a href="#loop">The flywheel</a>
-    <a href="#studio">Training Studio</a><a href="#operate">Updates &amp; support</a><a href="#safety">Safety</a><a href="overview.html">Overview</a><a href="documentation.html">Docs</a>
-    <a href="#quickstart" class="go">Run it — docker compose</a>
+    <a href="#studio">Training Studio</a><a href="#operate">Updates &amp; support</a><a href="#safety">Safety</a><a href="#deploy">Deploy</a><a href="overview.html">Overview</a><a href="/documentation">Docs</a>
+    <a href="#app" class="go">Open the app</a>
   </div>
 </div></div>
 
@@ -103,40 +103,24 @@
         VKE learns to fix it.</p>
       <div class="cta" style="align-items:flex-end">
         <div class="btncol">
-          <a class="btn p" href="#quickstart">▶ Run it on your machine</a>
-          <span class="btncap">docker compose up — everything bundled</span>
+          <a class="btn p" href="https://vkeapp.dkube.app" target="_blank" rel="noopener">Demo 1 — try it live →</a>
+          <span class="btncap">Local · on-prem (hub2)</span>
         </div>
         <div class="btncol">
-          <a class="btn s" href="https://vkeapp.dkube.app" target="_blank" rel="noopener">Hosted demo →</a>
-          <span class="btncap">if reachable from your network</span>
+          <a class="btn s" href="https://vkecloud.dkube.app" target="_blank" rel="noopener">Demo 2 — cloud →</a>
+          <span class="btncap">Cloud · frontier models (live)</span>
         </div>
-        <a class="btn s" href="documentation.html">Read the docs</a>
+        <a class="btn s" href="/documentation">Read the docs</a>
       </div>
     </div>
     <div class="herovid" style="border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-md);border:1px solid var(--hair)">
-      <video controls preload="metadata" poster="public/demo-poster.png?v=4" style="width:100%;display:block;background:#143E77">
-        <source src="public/vke-demo.mp4?v=4" type="video/mp4">
+      <video controls preload="metadata" poster="/public/demo-poster.png?v=4" style="width:100%;display:block;background:#143E77">
+        <source src="/public/vke-demo.mp4?v=4" type="video/mp4">
       </video>
     </div>
   </div>
 </div></header>
 <style>@media(max-width:820px){.herosplit{grid-template-columns:1fr!important}}</style>
-
-<section id="quickstart" class="tint"><div class="wide">
-  <div class="eyebrow">Quickstart — fully self-contained</div>
-  <h2>Three commands. Everything's in the box.</h2>
-  <p class="lede-block" style="max-width:780px">The appliance bundles the app, the AI models, the trainer and the sample datasets.
-    After the pull it runs entirely on your machine — a Mac laptop or a DGX box alike. <b>No accounts, no API keys, nothing leaves your network.</b></p>
-  <div class="arch" style="margin-top:22px">curl -O https://raw.githubusercontent.com/t4tarzan/vke-appliance/main/docker-compose.yml<br>
-docker compose up -d<br>
-open http://localhost:9040   <span style="color:#5BC98C"># sign in: ML engineer U-ML · PIN 3333 (all roles in the docs)</span></div>
-  <div class="grid3" style="margin-top:22px">
-    <div class="card"><span class="ic">📦</span><h3>What's in the bundle</h3><p><b>vke</b> — the console (~35 tiles, six lanes) with a synthetic cluster snapshot · <b>vke-ollama</b> — qwen2.5 1.5b + 0.5b baked in · <b>vke-trainer</b> — a real LoRA trainer with the HF base weights inside.</p></div>
-    <div class="card"><span class="ic">🧪</span><h3>Training is real</h3><p>Open the <b>Training Studio</b>, pick the bundled base, pick the <b>sre-pods 100-row dataset</b> (bundled), press Train — a genuine LoRA run on your CPU in minutes. Then append the bundled 50-row set and train v2: watch the loss overlay drop.</p></div>
-    <div class="card"><span class="ic">💬</span><h3>Chat with what you trained</h3><p>The trained model is merged, converted and imported into the bundled Ollama automatically — it appears in the chat dropdown, and one click hot-swaps the <span class="mono">k8s-sre</span> alias onto it.</p></div>
-  </div>
-  <p style="font-size:13px;color:var(--muted);margin-top:16px">Images: <span class="mono">ghcr.io/t4tarzan/vke</span> · <span class="mono">vke-ollama</span> · <span class="mono">vke-trainer</span> (linux/arm64 — Apple silicon &amp; DGX/Grace; amd64 on request). Compose + docs live in this repo.</p>
-</div></section>
 
 <section id="problem"><div class="col">
   <div class="eyebrow">The gap</div>
@@ -204,7 +188,7 @@ open http://localhost:9040   <span style="color:#5BC98C"># sign in: ML engineer 
     <div class="card"><span class="ic">🔁</span><h3>Retrain on top of v1</h3><p>One click sets your fused model as the base for the next run — v2 genuinely continues from v1's weights (in our live run, v2 <em>started</em> at the loss v1 took thirty iterations to reach).</p></div>
     <div class="card"><span class="ic">📦</span><h3>A factory that stands alone</h3><p>The whole studio also runs as its own app on a separate port — same code, same data. A customer who only wants the fine-tuning studio can deploy just that.</p></div>
   </div>
-  <div class="callout" style="margin-top:22px"><b>Try it now:</b> <a href="#quickstart">run the appliance</a> and sign in as the ML engineer (U-ML · PIN 3333) — train on the bundled 100-row dataset, append the 50-row set, and watch v2 beat v1. Or use the <a href="https://vkeapp.dkube.app" target="_blank" rel="noopener">hosted demo</a> if it's reachable from your network.</div>
+  <div class="callout" style="margin-top:22px"><b>Try it live:</b> sign in as the ML engineer (Karan Bose · PIN 3333) on <a href="https://vkeapp.dkube.app" target="_blank" rel="noopener">the on-prem demo</a> and open <b>Training Studio</b> — a real MLX finetune completes in about twenty seconds. The <a href="https://vkecloud.dkube.app" target="_blank" rel="noopener">cloud demo</a> walks the same flow up to the spend gate.</div>
 </div></section>
 
 <section id="operate" class="tint"><div class="wide">
@@ -254,11 +238,13 @@ open http://localhost:9040   <span style="color:#5BC98C"># sign in: ML engineer 
     <thead><tr><th>Capability</th><th>What it does</th><th>Status</th></tr></thead>
     <tbody>
       <tr><td><b>Observe</b></td><td>Live cluster overview, nodes, workloads with pod logs/describe/events in a slide-in drawer, the process fleet (pm2), topology, cluster events, telemetry (metrics · logs · traces) and multi-cloud inventory.</td><td><span class="pill ok">built ✓</span></td></tr>
-      <tr><td><b>Converse</b></td><td>Streamed chat grounded in live cluster state + your proven-fix history; a deep reasoning lane; playbooks; estate-wide search.</td><td><span class="pill ok">built ✓</span></td></tr>
+      <tr><td><b>Converse</b></td><td>Streamed chat grounded in live cluster state + your proven-fix history; trained-model answers arrive in three cited sections (training data · live cluster + learned fixes + field guide · a reasoned assessment with a 0–100 confidence meter and one-click Propose); a deep reasoning lane; playbooks; estate-wide search; Ask&nbsp;the&nbsp;Database with visible SQL.</td><td><span class="pill ok">built ✓</span></td></tr>
       <tr><td><b>Act + HITL</b></td><td>The fenced action console, the approval worklist + Telegram bot, six-section incident charts, the tamper-evident history + Trust Center.</td><td><span class="pill ok">built ✓</span></td></tr>
       <tr><td><b>Learn</b></td><td>The knowledge base of signatures × fixes, dataset builder with consensus verification, MLX finetune with a live loss curve, the stable serving alias, a benchmark leaderboard, the in-app agent loop.</td><td><span class="pill ok">built ✓</span></td></tr>
       <tr><td><b>Updates &amp; Tickets</b></td><td>Firmware-style updates — version + changelog on a public channel, a 6-hour poller, and a shape-aware one-button update (watchtower on the appliance). In-app support tickets with images and screen capture, filed straight to the issue tracker.</td><td><span class="pill plus">+ over the ask</span></td></tr>
-      <tr><td><b>Training Studio</b></td><td>A five-step guided studio: base-model picker · dataset upload/append (JSONL/CSV, PII-redacted) · cost-gated Estimate→Confirm launch (local $0, RunPod $/hr shown first) · restart-proof live loss · run history with the real v1→v2 overlay · promote-to-alias + test-in-place. Also deployable standalone.</td><td><span class="pill plus">+ over the ask</span></td></tr>
+      <tr><td><b>Training Studio</b></td><td>A five-step guided studio: base-model picker · dataset upload/append (JSONL/CSV, PII-redacted) · cost-gated Estimate→Confirm launch (local $0, RunPod $/hr shown first) · restart-proof live loss · run history with the real v1→v2 overlay · promote-to-alias + test-in-place · continue-training with a lineage lock · a curriculum runner (ordered datasets as sequential resume runs on one model). Also deployable standalone.</td><td><span class="pill plus">+ over the ask</span></td></tr>
+      <tr><td><b>Day-one knowledge</b></td><td>Every install ships knowing the canonical Kubernetes failures: 12 deep runbooks, 14 verified fixes distilled from a real 3,300-incident corpus, the 40-card K8s Field Guide, and two curated starter datasets — all retrievable with citations from first boot, on every shape including sealed ones.</td><td><span class="pill plus">+ over the ask</span></td></tr>
+      <tr><td><b>The learning loop</b></td><td>Every answer scored 0–100 and kept · a self-growing eval exam harvested from your own resolved incidents (promotes are gated on it) · a knowledge-gap ledger that turns dry-ups into one-click curriculum · the learning curve with a projection to 80% coverage.</td><td><span class="pill plus">+ over the ask</span></td></tr>
       <tr><td><b>Graduate</b></td><td>The T0/T1/T2 policy engine, the autonomy board, autonomous self-remediation, and the flywheel — the loop, measured.</td><td><span class="pill ok">built ✓</span></td></tr>
       <tr><td><b>Predictive engine</b></td><td>Recurring-signature, restart-trend and pressure signals — explainable rules today, the <span class="mono">k8s-sre</span> model on top.</td><td><span class="pill ok">built ✓</span></td></tr>
       <tr><td><b>Oversight</b></td><td>A modern analytics dashboard, the flywheel centerpiece, daily/weekly reports, and the Trust Center.</td><td><span class="pill plus">+ over the ask</span></td></tr>
@@ -281,9 +267,9 @@ open http://localhost:9040   <span style="color:#5BC98C"># sign in: ML engineer 
       <a class="btn s" href="https://vkecloud.dkube.app" target="_blank" rel="noopener">Demo 2 — cloud →</a>
       <span class="btncap">Cloud · frontier models (live)</span>
     </div>
-    <a class="btn s" href="documentation.html">Read the docs</a>
+    <a class="btn s" href="/documentation">Read the docs</a>
   </div>
-  <p style="font-size:13px;color:var(--subtle);margin-top:16px">Six roles · PIN login · light &amp; dark. Try it read-only as <span class="mono">demo</span> / <span class="mono">0000</span> — all <a href="documentation.html#logins">demo PINs are in the docs</a>.</p>
+  <p style="font-size:13px;color:var(--subtle);margin-top:16px">Six roles · PIN login · light &amp; dark. Try it read-only as <span class="mono">demo</span> / <span class="mono">0000</span> — all <a href="/documentation#logins">demo PINs are in the docs</a>.</p>
 </div></section>
 
 <div class="foot"><div class="row">

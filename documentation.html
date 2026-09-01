@@ -52,7 +52,7 @@
 <div class="wrap">
   <nav class="toc">
     <div class="h">User manual</div>
-    <a href="#manual">Overview</a><a href="#setup">Setup</a><a href="#features">Features</a><a href="#studio">Training Studio</a><a href="#studio-manual" style="padding-left:14px">— the studio manual</a><a href="#roles">Roles &amp; login</a><a href="#logins">Demo logins</a><a href="#lanes">The six lanes</a><a href="#loop-walk">A day in the loop</a>
+    <a href="#manual">Overview</a><a href="#setup">Setup</a><a href="#features">Features</a><a href="#studio">Training Studio</a><a href="#studio-manual" style="padding-left:14px">— the studio manual</a><a href="#roles">Roles &amp; login</a><a href="#logins">Demo logins</a><a href="#lanes">The six lanes</a><a href="#loop-walk">A day in the loop</a><a href="#learning">How VKE learns</a>
     <div class="h">Technical</div>
     <a href="#tech">Architecture</a><a href="#fence">The safety fence</a><a href="#schemas">Data model</a><a href="#deploy">Deployment</a><a href="#demos">Two demo lanes</a>
     <div class="h">Reference</div>
@@ -152,7 +152,7 @@ open http://localhost:9040</pre>
         ServiceAccount — read-only by RBAC until you grant more.</p>
       <p>The chart is published as a <b>public OCI package</b> — no repo clone, no credentials,
         works on x86 and ARM clusters alike (all images are multi-arch):</p>
-      <pre>helm install vke oci://ghcr.io/t4tarzan/charts/vke --version 1.5.0 \
+      <pre>helm install vke oci://ghcr.io/t4tarzan/charts/vke --version 1.6.41 \
   --namespace vke --create-namespace \
   --set ai.baseUrl=http://&lt;your-ollama-or-gateway&gt;:11434 \
   --set ai.model=qwen2.5:7b</pre>
@@ -200,6 +200,8 @@ open http://localhost:9040</pre>
       <h3>Converse — ask the engineer</h3>
       <ul>
         <li><b>Chat</b> — grounded in the live cluster and this cluster's own fix history; pick <span class="pill">k8s-sre</span> to answer from history, or deep·claude.</li>
+        <li><b>Three-section answers</b> (trained model + live-cluster context ON) — ① the matching <b>training-data rows</b>, cited by dataset + row number; ② the <b>live cluster</b> (pulse chips, failing pods with your named workload flagged) + this cluster's <b>learned fixes</b> (✓ verified, success stats, fence) + matching <b>field-guide</b> cards; ③ a deterministic <b>assessment</b> — a 0–100 confidence meter, finding, likely cause, a recommended fix with one-click <b>⚡ Propose</b> into the approval flow, and alternate causes — with the model's reasoning beneath it.</li>
+        <li><b>Confidence, scored honestly</b> — every answer earns a number (verified-fix match 40 · the fix-class's real success rate ×20 · retrieval ×20 · replay 10 · corroboration 10; conflicting sources cap it). A question with no k8s jargon still grounds: the live cluster's observed failure reason joins the lookup automatically.</li>
         <li><b>Playbooks</b> — built-in runbooks plus cards generated from proven fixes.</li>
         <li><b>Search</b> — across pods, events, the event log and the knowledge base.</li>
       </ul>
@@ -216,9 +218,13 @@ open http://localhost:9040</pre>
       <h3>Learn — the factory (also runs standalone)</h3>
       <ul>
         <li><b>History</b> — the append-only, hash-chained event log: the training corpus.</li>
-        <li><b>Knowledge Base</b> — issue signatures × proven fixes × outcomes.</li>
-        <li><b>Datasets</b> — build, consensus-verify and export SFT rows from the log — or <b>upload your own</b> (JSONL/CSV, normalized + PII-redacted, with append).</li>
-        <li><b>Training Studio</b> — the five-step guided finetune flow: model → data → cost-gated train → watch → serve &amp; chat (<a href="#studio">details below</a>).</li>
+        <li><b>Knowledge Base</b> — issue signatures × proven fixes × outcomes, plus the <b>fix corpus</b> panel: every retrievable fix with its provenance (bundled · playbook · learned · distilled), and one-click <b>✓ Verify</b> that turns a candidate into grounding <em>and</em> a training target.</li>
+        <li><b>Day-one knowledge, baked in</b> — every install ships knowing the canonical Kubernetes failures: 12 deep runbooks, 14 verified fix-corpus rows distilled from a real 3,300-incident EKS corpus (seeded at every boot), and the 40-card <b>K8s Field Guide</b> (restarts · rollouts · scaling · scheduling &amp; nodes · namespaces/ports/DNS · RBAC · storage · probes) backing the reasoning on every shape, including sealed ones.</li>
+        <li><b>Knowledge</b> — department documents + the estate's own ops history as collections, with <b>span-level citations</b> that deep-link to the exact passage; ingest by paste, semantic search where embeddings run.</li>
+        <li><b>Ask the Database</b> — natural language over VKE's own records, any uploaded dataset's record store, or a read-only Postgres — every answer shows its exact SQL.</li>
+        <li><b>Datasets</b> — build, consensus-verify and export SFT rows from the log — or <b>upload your own</b> (JSONL/CSV, normalized + PII-redacted, with append). Two curated starters ship in every picker: <span class="pill">fixes-log-120</span> (real incidents → worked fixes, with refusals and hard negatives) and <span class="pill">field-guide-qa</span> (the generic guide as Q&amp;A).</li>
+        <li><b>Training Studio</b> — the five-step guided finetune flow: model → data → cost-gated train → watch → serve &amp; chat — with a <b>lineage lock</b> (a model's run chain pins its base), visible <b>continue-training</b>, and a <b>curriculum runner</b> that trains ordered datasets as sequential resume runs on one model (<a href="#studio">details below</a>).</li>
+        <li><b>Eval-gated promote</b> — the exam grows itself from your own resolved incidents (every approved-and-verified fix harvests a case); a candidate that regresses against the current model is blocked from serving.</li>
         <li><b>Models</b> — aliases, hot-swap and the six-section model chart.</li>
         <li><b>Benchmarks</b> — the per-iteration leaderboard + replay-verify (Track B→A migration).</li>
         <li><b>RAG</b> — GPU-less specialization on your own history.</li>
@@ -229,7 +235,8 @@ open http://localhost:9040</pre>
       <h3>Oversight — the loop, measured</h3>
       <ul>
         <li><b>Analytics</b> — KPIs, charts and trends folded from the event log.</li>
-        <li><b>Flywheel</b> — fixes learned → reproduced locally → graduated to autonomous.</li>
+        <li><b>Flywheel</b> — fixes learned → reproduced locally → graduated to autonomous, plus the <b>learning curve</b>: coverage of seen failure classes, the 14-day confidence trend, and a projection of weeks to 80% coverage.</li>
+        <li><b>Knowledge gaps</b> — every low-confidence answer records its question; the board lists the top gaps with one-click <b>Distill</b> (→ an unverified candidate for human review) or Dismiss. The model's ignorance writes its own curriculum.</li>
         <li><b>Reports</b> — daily audit and weekly review.</li>
         <li><b>Trust Center</b> — the fence, the tamper-evident audit chain, and the role matrix.</li>
         <li><b>Documentation</b> — this manual, in-app.</li>
@@ -273,6 +280,18 @@ open http://localhost:9040</pre>
       <div class="callout">The studio also feeds the <b>Iterative Demo</b> tile: once two real runs exist it stops showing the staged
         story and overlays your actual loss curves. And the whole factory — studio included — runs <b>standalone on its own port</b>
         (same code, same data), for deployments that only want the fine-tuning product.</div>
+
+      <h3>Continuing, chaining and staying safe</h3>
+      <p><b>Continue training</b> — step ① lists your existing models ("continue: k8s-sre · 3 runs ·
+        resumes · trained through: a → b"); picking one locks the model and its base together, and the
+        run <em>resumes the saved adapter</em>, so version n+1 starts from what version n learned.
+        <b>Curriculum</b> — "＋ stage" on any dataset in step ② builds an ordered chain (e.g.
+        <span class="pin">your-logs → fixes-log-120 → field-guide-qa</span>) trained as sequential
+        resume runs on one model, advancing automatically as each stage succeeds; step ④ shows
+        "stage x/y" and the run history is the chain's own record. <b>The lineage lock</b> — an
+        existing run chain pins its base model: retraining defaults to it, and switching bases is
+        refused loudly (it would corrupt the carried weights) unless you explicitly start a new
+        model name.</p>
 
       <h3 id="studio-manual" style="margin-top:26px">The studio manual — from CSV to answers</h3>
       <p>One import feeds <b>two lanes</b>. Your CSV becomes a <b>record store</b> (every row, original
@@ -403,6 +422,46 @@ open http://localhost:9040</pre>
           same record store, receipt shown.</li>
       </ol>
 
+    </section>
+
+    <section id="learning">
+      <h2>How VKE learns — day one to autonomous</h2>
+      <p>Small local models don't get better at <em>facts</em> by training — they get better because the
+        system around them compounds: <b>retrieval answers the facts · training teaches the format and
+        reasoning pattern · verification turns "an answer" into a high-confidence answer</b>. Four
+        deterministic loops (no extra models) make that measurable:</p>
+      <ul>
+        <li><b>Every answer is scored (0–100) and the scores are kept</b> — the daily average is the
+          maturity signal, on the Flywheel board.</li>
+        <li><b>The exam grows itself</b> — every approved fix whose outcome came back OK harvests an
+          eval case; promotes are judged against <em>your</em> resolved incidents.</li>
+        <li><b>Dry-ups become work items</b> — a low-confidence answer records its question in the gap
+          ledger ("asked 7×, the model had nothing"), one click distills a candidate for human review.</li>
+        <li><b>The learning curve is on the board</b> — coverage of seen failure classes, the 14-day
+          confidence trend, and the projected weeks to 80% coverage.</li>
+      </ul>
+      <h3>What to expect, honestly</h3>
+      <table>
+        <tr><th>Stage</th><th>State</th><th>Confidence profile</th><th>Autonomy posture</th></tr>
+        <tr><td><b>Day 0</b> (fresh install)</td><td>12 runbooks · 14 verified bundled fixes · the field
+          guide · the starter datasets</td><td>medium-high on the canonical failures, low elsewhere</td>
+          <td>HITL only; T0 master off</td></tr>
+        <tr><td><b>Week 1–2</b></td><td>first real incidents flow approve → outcome → verify; the exam
+          reaches 10–20 cases; the gap ledger fills</td><td>high on <em>your</em> recurring
+          signatures</td><td>replay-verify the top classes</td></tr>
+        <tr><td><b>Month 1</b></td><td>50–100 verified fixes; the first retrain on your history passes
+          the eval gate</td><td>high on ~60–80% of seen classes</td><td>enable T0 per class where the
+          five gates pass</td></tr>
+        <tr><td><b>Steady state</b></td><td>coverage ≥80%; gaps near zero; retrains routine</td>
+          <td>score trend flat-high; dips flag new failure modes</td><td>T0 on proven classes; the
+          breaker as the rail</td></tr>
+      </table>
+      <p>The throttle on risk never moves: the five graduation gates, the T0 master switch, the
+        per-class circuit breaker and the mutation fence stand between a confident answer and an
+        autonomous action — <b>confidence buys proposals; verification buys autonomy</b>.</p>
+      <p><b>Operating cadence</b> — daily: work the approvals queue honestly (approve → outcome is the
+        flywheel's fuel). Weekly: clear the gap ledger; replay-verify anything with ≥3 successes.
+        Monthly: retrain (the nightly auto-retrain does it once the eval set exists) and read the curve.</p>
     </section>
 
     <section id="roles">
