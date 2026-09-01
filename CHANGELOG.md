@@ -1,5 +1,10 @@
 # VKE — Changelog
 
+## 1.6.41 · 2026-09-01
+
+- Bundled fix-knowledge now seeds at BOOT (idempotent) — an upgraded install no longer waits
+  up to 24h (the nightly sync) for newly bundled rows; fresh installs unchanged.
+
 ## 1.6.40 · 2026-09-01
 
 - **Field-verified knowledge promoted to the bundle.** The `pod:UnexpectedAdmissionError`
