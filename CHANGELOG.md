@@ -1,5 +1,20 @@
 # VKE — Changelog
 
+## 1.6.37 · 2026-09-01
+
+- **Open reason vocabulary for fix retrieval.** `signals_in`'s reason list was a closed tuple, so a
+  row distilled for a NOVEL failure reason (live case: `UnexpectedAdmissionError` on the DGX) could
+  never be retrieved — distill-from-a-gap wrote rows the lookup was structurally blind to. The
+  corpus's own signatures now extend the vocabulary, so a distilled row becomes retrievable the
+  moment it lands. Subsumed-token dropping + the static floor unchanged; regression-checked.
+- **Trainer floating tags repaired + versioned.** `vke-trainer:latest` was silently serving
+  1.6.28 content — the 1.6.30 tag-move never held on the registry — so the signed bundles
+  1.6.31–1.6.36 carried a trainer without the Mistral answer-span fix (qwen/granite training
+  unaffected; only Mistral finetunes in those sealed installs are impacted — retrain on this
+  bundle's trainer). `latest`/`lean` now serve trainer-HEAD content, `1.6.37`/`1.6.37-lean`
+  pin it, and release pre-flight gained a floating-tag coherence check so staleness can never
+  pass unnoticed again.
+
 ## 1.6.36 · 2026-09-01
 
 - **The three-section trained-model answer, rebuilt for readability + reasoning.** Section ① now

@@ -1,9 +1,8 @@
 {
-  "version": "1.6.36",
+  "version": "1.6.37",
   "date": "2026-09-01",
   "highlights": [
-    "The three-section trained-model answer, rebuilt for readability + reasoning.",
-    "The reason bridge.",
-    "Fix-corpus ranking fix."
+    "Open reason vocabulary for fix retrieval.",
+    "Trainer floating tags repaired + versioned."
   ]
 }
