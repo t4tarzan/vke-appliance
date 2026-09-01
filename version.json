@@ -1,12 +1,9 @@
 {
-  "version": "1.6.35",
+  "version": "1.6.36",
   "date": "2026-09-01",
   "highlights": [
-    "VKE now ships knowing the ten canonical Kubernetes failures.",
-    "A new always-there training dataset: `fixes-log-120`.",
-    "Every answer now carries a numeric confidence score (0\u2013100), and the scores are kept.",
-    "The eval exam grows itself.",
-    "Dry-ups become work items.",
-    "The learning curve is on the Flywheel board."
+    "The three-section trained-model answer, rebuilt for readability + reasoning.",
+    "The reason bridge.",
+    "Fix-corpus ranking fix."
   ]
 }

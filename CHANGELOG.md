@@ -1,5 +1,23 @@
 # VKE — Changelog
 
+## 1.6.36 · 2026-09-01
+
+- **The three-section trained-model answer, rebuilt for readability + reasoning.** Section ① now
+  renders chat-JSONL training rows as `incident → fix` pairs instead of the raw row repr. Section ②
+  is fully structured: cluster-pulse chips, failing-pod rows with the question's own workloads
+  flagged, recent warnings, and learned-fix cards carrying signature · ✓ verified · success stats ·
+  fence. Section ③ opens with a deterministic ASSESSMENT scaffold — numeric confidence meter,
+  Finding, Likely cause, a Recommended-fix box with a one-click ⚡ Propose (routes into the fenced
+  approval flow), alternate causes from the playbook library, and an explicit next step — with the
+  model's prose streaming beneath it under an answer contract that forbids the ask-back failure mode.
+- **The reason bridge.** A layman question ("minio is throwing errors") carries no k8s failure token,
+  so the signature lookup used to dry up while the live cluster was showing the reason. Grounding,
+  citations, the verdict and the assessment now share an evidence-augmented question carrying the
+  matched (else top) live problem's observed reason + name.
+- **Fix-corpus ranking fix.** Name tokens now join on the signature's OWNER segment only — the plain
+  word "health" in "assess health" was substring-matching `pod:Unhealthy`'s reason and outranking an
+  exact Evicted signal. The crashy/traefik owner joins (D5.8) regression-checked intact.
+
 ## 1.6.35 · 2026-09-01
 
 - **VKE now ships knowing the ten canonical Kubernetes failures.** A real fixed-incidents
