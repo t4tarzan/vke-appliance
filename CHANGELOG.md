@@ -1,5 +1,46 @@
 # VKE — Changelog
 
+## 1.6.35 · 2026-09-01
+
+- **VKE now ships knowing the ten canonical Kubernetes failures.** A real fixed-incidents
+  corpus (3,300 EKS pod-crash events with their working solutions) was distilled into the
+  product: the builtin playbook library grew 4 → 12 deep runbooks (startup/readiness/liveness
+  probes split and explained, evictions as capacity decisions, config/dependency crash-loops,
+  overload-vs-deadlock, image-pull as a config fault), and a bundled `data/fix-knowledge.jsonl`
+  seeds 13 curated, verified fix-corpus rows on every fresh install — so chat with cluster
+  context answers the common failures WITH citations from day one, before the cluster has any
+  history of its own. All identifiers sanitized; `bin/gen-fixes-knowledge.py` regenerates
+  everything deterministically from the private source.
+- **A new always-there training dataset: `fixes-log-120`.** 120 rows in the serving-contract
+  shape — 100 worked examples (context brief → Diagnosis/Likely cause/Next step/Fence, balanced
+  across 8 crash categories with per-root-cause diversity), 14 refusal rows (calibrated
+  "no verified fix — investigate via X" honesty), and 6 hard-negative pairs (near-miss
+  signatures with DIFFERENT correct verbs: ImagePullBackOff vs CrashLoop, OOM vs Evicted,
+  readiness vs startup probes). Ships with a 1,088-row sanitized records store, so Ask the
+  Database works on the same events the model trains on.
+- **Every answer now carries a numeric confidence score (0–100), and the scores are kept.**
+  Deterministic: a verified fix-match, the fix-class's REAL success rate, retrieval strength,
+  the replay-verified bonus and source corroboration add up; conflicting sources cap it. The
+  high/medium/low band now follows the score (a one-weak-citation answer reads low instead of
+  hiding behind "grounded"), and every scored answer lands in `answer_score` — the daily
+  average is the model's maturity signal.
+- **The eval exam grows itself.** Every approved fix whose outcome came back OK harvests an
+  eval case (incident context → the known-good fenced verb; `auto-harvest` set, capped 3 per
+  signature). The eval-gated promote and nightly auto-retrain now judge candidates against the
+  cluster's own resolved incidents — the gate stops starving on day one.
+- **Dry-ups become work items.** A low-confidence answer records its question in the
+  knowledge-gap ledger (deduped, counted). The Flywheel board lists the top gaps with
+  one-click Distill (targeted; the result is an unverified candidate for review) or Dismiss —
+  the model's ignorance produces its own curriculum.
+- **The learning curve is on the Flywheel board.** Coverage (failure classes seen with a
+  verified fix ÷ classes seen), the 14-day confidence trend, the exam size, open gaps — and a
+  projection: at the trailing verification rate, the estimated weeks to 80% coverage.
+  The methodology (day-0 → steady-state maturity map, operating cadence, why confidence buys
+  proposals and only verification buys autonomy) is in `docs/LEARNING-LOOP.md`.
+- The fixes-log corpus also gained a **real-names private twin** (`data/private-datasets/`,
+  never in public images) — on the operator's own installs, analytics/watchlist/proposals
+  ground on the actual namespaces and workloads.
+
 ## 1.6.33 · 2026-09-01
 
 - **The Autonomy Board's row controls stop dwarfing the row.** enable T0, the breaker
