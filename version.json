@@ -1,7 +1,7 @@
 {
-  "version": "1.6.41",
+  "version": "1.6.42",
   "date": "2026-09-01",
   "highlights": [
-    "Bundled fix-knowledge now seeds at BOOT (idempotent) \u2014 an upgraded install no longer waits"
+    "Documentation release."
   ]
 }

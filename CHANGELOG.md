@@ -1,5 +1,18 @@
 # VKE — Changelog
 
+## 1.6.42 · 2026-09-01
+
+- **Documentation release.** The public docs (vke.dkube.app · vkedgx · the GitHub-Pages copy) are
+  brought fully current: the install matrix for every shape (native macOS/MLX · appliance compose
+  amd64+arm64 · in-cluster Helm, now `--version`-current · the signed air-gap bundle, with the
+  Compose-v2 requirement and fix), and the features shipped across 1.6.34–1.6.41 — three-section
+  cited answers with the 0–100 confidence meter, day-one knowledge (12 runbooks · 14 verified
+  corpus rows · the 40-card K8s Field Guide), the fix-corpus Verify panel, Ask the Database,
+  bundled starter datasets, eval-gated promote, and the Training Studio's continue-training /
+  lineage lock / curriculum runner. Plus a new **"How VKE learns — day one to autonomous"**
+  section: the four compounding loops, the honest maturity map, and the operating cadence.
+  No behavior changes.
+
 ## 1.6.41 · 2026-09-01
 
 - Bundled fix-knowledge now seeds at BOOT (idempotent) — an upgraded install no longer waits
