@@ -1,5 +1,32 @@
 # VKE — Changelog
 
+## 1.6.39 · 2026-09-01
+
+- **The training lineage layer (five extensions, answer path untouched).** ① **Lineage lock**
+  — an existing run chain pins its base: retrains default to it (auto_retrain included), and a
+  base change is refused loudly (`lineage_locked`) unless `override_base` is explicit — a resume
+  on the wrong base corrupted silently before. ② **Continue-training is visible**: the Studio's
+  §1 lists existing models ("continue: k8s-sre · 5 runs · resumes · trained through: a → b"),
+  picking one locks job+base together. ③ **The curriculum runner**: "＋ stage" on any dataset
+  builds an ordered chain trained as SEQUENTIAL RESUME RUNS on one job (launch validates every
+  stage; a watcher advances on success; §4 shows "stage x/y"; the run history is the curriculum's
+  own record). Proven live: a 2-stage chain ran unattended, stage 2 resumed the stage-1 adapter.
+  ④ **Model-card clarity**: an explicit "serving X — NOT the last trained model" banner when the
+  backing differs from the trained candidate, a Training-chain section (oldest→newest), and
+  promote history labeled (old → new). ⑤ **The eval gate armed from boot**: fresh installs seed
+  the k8s-sre exam from the bundled verified fix corpus, so promotes are gated everywhere.
+- rag2 field-guide seeding fixed (collection shape) — 40 guide docs land in the semantic lane
+  at boot where embeddings exist.
+- **Knowledge-surfaces audit (operator ask):** the fix corpus — what chat actually retrieves as
+  "Known fixes" — had NO screen and no way to sign off a distilled candidate. The Knowledge Base
+  tile now carries a **Fix corpus panel**: every row with signature · provenance · verified/candidate
+  state, one-click **✓ Verify / Unverify** (sre_lead/ml_engineer — the gate that turns a candidate
+  into a training target), full-text drawers, corpus KPIs, and two tools (**Export corpus → dataset**,
+  **Push corpus → Knowledge**). The Knowledge tile's semantic search now reports an embeddings-down
+  state honestly instead of "no hits". Fixed a real seeding bug the audit caught: the field-guide
+  rag collection re-ingested on every boot (160 docs for 40 cards, duplicate hits) — seeding is now
+  fingerprint-gated and replaces instead of accumulating.
+
 ## 1.6.38 · 2026-09-01
 
 - **The K8s Field Guide — bundled generic operational knowledge.** 40 authored,
