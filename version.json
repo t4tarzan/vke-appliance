@@ -1,9 +1,9 @@
 {
-  "version": "1.6.44",
+  "version": "1.6.45",
   "date": "2026-09-02",
   "highlights": [
-    "Dataset projection trims the input side too.",
-    "The Studio shows what an iteration count actually buys, before you confirm.",
-    "Early-stop patience scales with the iteration budget"
+    "The Training Studio's train step became honest controls",
+    "The trainer image's cheap upgrade is now guaranteed, not incidental",
+    "The trainer bake is SLIMMED to two models"
   ]
 }

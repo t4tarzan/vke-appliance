@@ -1,5 +1,26 @@
 # VKE — Changelog
 
+## 1.6.45 · 2026-09-02
+
+- **The Training Studio's train step became honest controls** (PR #41): the dead "LoRA
+  layers" box (written to the spec, never read by the trainer) is replaced by **rank** — the
+  real capacity knob, now actually wired through `LoraConfig` with alpha tracking rank at 2× —
+  and iterations / batch / learning rate / rank / max sequence length are sliders with real
+  bounds. Three live gauges (`GET /v1/finetune/plan`): data coverage, token-truncation cliff,
+  adapter size + runtime estimate (calibrated on a measured GB10 run). `max_seq_length` comes
+  from the spec too — rows are no longer silently cut at a hardcoded 1024.
+- **The trainer image's cheap upgrade is now guaranteed, not incidental** (PR #42): the base
+  is pinned by digest, the build publishes/consumes a registry build cache so identical
+  content keeps identical layer digests across builders, and `bin/check-image-delta.sh` fails
+  a release whose upgrade would force a big re-pull.
+- **The trainer bake is SLIMMED to two models** (operator): Qwen2.5-0.5B (fast CPU
+  prototyping) + Granite 4.2 3B with its official GGUF sidecar (the bundled brain). The fat
+  image drops from ~26.6GB to roughly a third of that; llama-3.2-1b and gemma-3-1b leave the
+  catalog everywhere (still reachable by name on connected installs); Mistral-7B keeps working
+  via the air-gap bundle's volume mount or on-demand download. **This release re-bakes the
+  trainer, so it is the one full re-pull** — the digest pin and the slim land in the same
+  event, and upgrades are ~0-byte layer deltas from here on.
+
 ## 1.6.44 · 2026-09-02
 
 - **Dataset projection trims the input side too.** #39 fixed which column becomes the answer;
