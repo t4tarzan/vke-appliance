@@ -1,9 +1,12 @@
 {
-  "version": "1.6.45",
-  "date": "2026-09-02",
+  "version": "1.6.46",
+  "date": "2026-09-03",
   "highlights": [
-    "The Training Studio's train step became honest controls",
-    "The trainer image's cheap upgrade is now guaranteed, not incidental",
-    "The trainer bake is SLIMMED to two models"
+    "VKE observes many clusters at once.",
+    "Cluster reads are scoped per request",
+    "Signatures carry the cluster and namespace",
+    "A connect flow that says WHICH stage failed",
+    "The Clusters screen says what a cluster IS",
+    "Three-step onboarding"
   ]
 }

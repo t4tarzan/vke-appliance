@@ -1,5 +1,30 @@
 # VKE — Changelog
 
+## 1.6.46 · 2026-09-03
+
+- **VKE observes many clusters at once.** The connectivity stack lands: attach any number of
+  Kubernetes clusters (EKS included) and the alert/incident sweep now covers **every connected
+  cluster in parallel** — and refuses to act on clusters it can only observe (no write grant).
+- **Cluster reads are scoped per request**, so two people looking at different clusters no longer
+  change what each other sees (was one global "active cluster" switch).
+- **Signatures carry the cluster and namespace** (`cluster:namespace:kind:reason:owner`) — a fix
+  proven on staging can no longer arm itself in production; success counters stay per-cluster. Includes
+  a migration that recovers namespaces from existing events.
+- **A connect flow that says WHICH stage failed** — parse · auth-style · config · reach · auth ·
+  permissions — instead of a bare "could not connect", plus a read-only observer manifest and repair
+  for the line-wrapped ARN real pasted kubeconfigs arrive with.
+- **The Clusters screen says what a cluster IS** — persisted state chips that survive a refresh,
+  "Make default", a real Disconnect, kubeconfig-path dedup. Fixes a bug where making a remote cluster
+  default silently stopped the local one being monitored.
+- **Three-step onboarding** — a generated CloudShell script with the cluster pre-filled (was eight
+  steps), records who connected a cluster, and a stdlib AWS SigV4 signer + EKS token minter (checked
+  against AWS's published test vectors).
+- **IAM clusters with no stored credential** — the kubeconfig holds only the server URL + CA and a
+  15-minute token is minted per read.
+- **`/forge` is a persistent volume now** (chart): trained LoRA adapters survived on an `emptyDir`
+  before, so every rollout deleted them — it had cost finished adapters three times. `ReadWriteOnce`
+  with `resource-policy: keep`; enable via `trainer.persistence.enabled` (off by default).
+
 ## 1.6.45 · 2026-09-02
 
 - **The Training Studio's train step became honest controls** (PR #41): the dead "LoRA
