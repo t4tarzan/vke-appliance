@@ -1,5 +1,24 @@
 # VKE — Changelog
 
+## 1.6.44 · 2026-09-02
+
+- **Dataset projection trims the input side too.** #39 fixed which column becomes the answer;
+  the question side still carried every other column — including constants (one value across
+  all rows) and per-row identifiers, both provably uninformative. They are now dropped with the
+  reason recorded in the recipe (`dropped_columns`); free-text fields survive (uniqueness alone
+  is not identifier-ness — the values must also LOOK like ids: short, no whitespace).
+  Low-cardinality post-hoc annotations (root_cause-shaped columns) are flagged in
+  `context_notes`, never silently removed — only the operator knows which are legitimate inputs.
+- **The Studio shows what an iteration count actually buys, before you confirm.** The estimate
+  now renders coverage arithmetic next to the confirm button: sample visits vs training rows =
+  epochs, with 1-epoch and 3-epoch iteration suggestions and warnings both ways (below one pass:
+  most rows never seen; above ~8: memorisation). Iterations are labelled as a ceiling, not a
+  target.
+- **Early-stop patience scales with the iteration budget** (~10% of the run, floor 3 evals;
+  `VKE_EARLY_STOP_PATIENCE` overrides) — a flat 3-eval patience was 2.5% of a 1200-iteration
+  run and stopped runs that were drifting back toward their best validation loss. Trainer image
+  change — the next cut carries the trainer.
+
 ## 1.6.43 · 2026-09-02
 
 - **The model card now tells the truth about loss.** A card could read `0.003 → 0`, which is

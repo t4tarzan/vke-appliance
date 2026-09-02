@@ -1,12 +1,9 @@
 {
-  "version": "1.6.43",
+  "version": "1.6.44",
   "date": "2026-09-02",
   "highlights": [
-    "The model card now tells the truth about loss.",
-    "Validation loss is on the card.",
-    "Fixed: every run in the training chain reported `val: null`.",
-    "The chat picker no longer lists a trained model twice with no explanation.",
-    "Fixed the projection bug that trained a classifier instead of an assistant.",
-    "The question side can no longer contain the answer."
+    "Dataset projection trims the input side too.",
+    "The Studio shows what an iteration count actually buys, before you confirm.",
+    "Early-stop patience scales with the iteration budget"
   ]
 }
