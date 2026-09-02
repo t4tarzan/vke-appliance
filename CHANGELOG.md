@@ -1,5 +1,59 @@
 # VKE — Changelog
 
+## 1.6.43 · 2026-09-02
+
+- **The model card now tells the truth about loss.** A card could read `0.003 → 0`, which is
+  two separate lies about a healthy run. (1) The run history stores losses as a 60-point
+  *window*, so on a 200-iteration run `losses[0]` was iteration ~141 — a converged mid-run
+  value presented as "the starting loss". The true first train/val values are now recorded
+  before the window is taken, and pre-existing entries are labelled *"oldest kept point, not
+  the run start"* rather than silently misreported. (2) The trainer logged loss at `.3f` and
+  the studio parses those log lines back into history, so anything under 0.0005 became exactly
+  `0.0`; loss is now logged at `.5f`, and a floored value renders as `<0.00001 — not zero`.
+- **Validation loss is on the card.** It was recorded all along and never shown, which is
+  precisely what made a near-zero train loss look alarming. The held-out signal now has its
+  own row, marked as the one to read.
+- **Fixed: every run in the training chain reported `val: null`.** The curriculum record read
+  `val_loss` off the history entry — a key the writer has never produced. It now reads from
+  `val_losses`/`metrics`, so continue-training (train an alias again on new data) finally shows
+  its per-run validation descent.
+- **The chat picker no longer lists a trained model twice with no explanation.** A fused run
+  publishes weights as `<alias>:latest`, so the switchboard listed the bare artifact alongside
+  the alias — same weights, two entries, only one carrying a model card. The bare entry is kept
+  (an unpromoted candidate is the only way to chat with weights the alias is not serving) and
+  is now labelled *raw weights of* / *unpromoted candidate of* its alias. Matching is confined
+  to the `<alias>:latest` fuse namespace, so an alias backed by a base model never relabels or
+  hides that base model.
+- **Fixed the projection bug that trained a classifier instead of an assistant.** A crashed-pods
+  upload carrying both `solution` (1000 distinct written fixes) and `reason` (5 event labels)
+  trained on `reason` — with `solution` left sitting in the *input*. The adapter learned to emit
+  one of five words. Cause: `_TARGET_NAMES` listed `resolution` but not `solution`, and the picker
+  scanned columns in reverse-alphabetical order, so the choice came down to alphabetical position.
+  Target columns are now **ranked** — a written answer always outranks a label — and `solution` is
+  in the list. Unchanged for any dataset with a single candidate column.
+- **The question side can no longer contain the answer.** `render_query` now excludes target
+  columns unconditionally, so a stale or hand-written `context` cannot leak the label.
+- **The degenerate-target guardrail actually fires.** It only warned at "fewer than 2 distinct
+  answers", which this dataset (5 distinct, ~7 characters, 1000 rows) sailed past. It now also
+  flags a **label-shaped** target — few distinct values for the row count *and* very short answers
+  — and names the written-answer column that was passed over.
+- **A training target may now be several columns** (`target=["reason","solution"]`), rendering
+  `Reason: <label>` followed by the prose. The label is scoreable on a held-out split and can be
+  checked against the live event reason at inference; a string target is unaffected.
+- **The chat answer no longer invents a Kubernetes object out of the question.** "Assess the
+  overall health…" produced *"no failing pod matches 'overall'"* — the first non-stopword token was
+  treated as a resource name. Tokens are now punctuation-stripped before the stopword test (which
+  is why `now.` also slipped through), generic-intent words are stopwords, and the "no pod matches"
+  line requires a resource-shaped name. A general question about a healthy cluster now gets a
+  plain cluster-wide finding instead of no finding at all.
+- **Fixed JS leaking into the chat card as visible text.** `screens3.js` dropped `JSON.stringify`
+  output raw into an `onclick` attribute; its quotes closed the attribute and the `>` in a fix
+  text's `<pod>` placeholder closed the tag, so `",channel:'chat'})">` rendered next to the Propose
+  button. Every other call site already escaped this.
+- **Truncated text no longer cuts mid-word** — the card showed a cause ending "it als". Clipping is
+  word-boundary aware with an ellipsis.
+- New `tests/data_target_walk.py` pins the whole projection chain.
+
 ## 1.6.42 · 2026-09-01
 
 - **Documentation release.** The public docs (vke.dkube.app · vkedgx · the GitHub-Pages copy) are

@@ -1,7 +1,12 @@
 {
-  "version": "1.6.42",
-  "date": "2026-09-01",
+  "version": "1.6.43",
+  "date": "2026-09-02",
   "highlights": [
-    "Documentation release."
+    "The model card now tells the truth about loss.",
+    "Validation loss is on the card.",
+    "Fixed: every run in the training chain reported `val: null`.",
+    "The chat picker no longer lists a trained model twice with no explanation.",
+    "Fixed the projection bug that trained a classifier instead of an assistant.",
+    "The question side can no longer contain the answer."
   ]
 }
