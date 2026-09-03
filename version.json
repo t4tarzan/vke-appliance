@@ -1,12 +1,11 @@
 {
-  "version": "1.6.46",
+  "version": "1.6.47",
   "date": "2026-09-03",
   "highlights": [
-    "VKE observes many clusters at once.",
-    "Cluster reads are scoped per request",
-    "Signatures carry the cluster and namespace",
-    "A connect flow that says WHICH stage failed",
-    "The Clusters screen says what a cluster IS",
-    "Three-step onboarding"
+    "VKE speaks A2A \u2014 it plugs into an agent host like any other agent.",
+    "Chat answers from the cluster you're looking at.",
+    "An approved fix applies on the cluster it was raised FOR",
+    "The watchlist stays correct now that signatures carry a cluster and a namespace",
+    "New doc: \"The eight routes into VKE\""
   ]
 }

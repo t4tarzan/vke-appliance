@@ -1,5 +1,25 @@
 # VKE — Changelog
 
+## 1.6.47 · 2026-09-03
+
+- **VKE speaks A2A — it plugs into an agent host like any other agent.** A new Agent2Agent
+  adapter exposes an Agent Card at `/.well-known/agent-card.json` and a JSON-RPC endpoint at
+  `/a2a` (message/send + streaming SSE), with three skills: **ask the cluster's SRE model**
+  (grounded on live state + the cluster's own fix history, cited), **diagnose an incident**, and
+  **propose a fenced fix**. An external UI (e.g. Genie) discovers VKE and drives it exactly like
+  the other A2A agents it already integrates. propose-fix over A2A still queues for human approval
+  and is never auto-executed — the fence holds even over the no-auth demo lane.
+- **Chat answers from the cluster you're looking at.** The console chat now stamps the on-screen
+  cluster on every request, so it stops silently answering from whichever cluster happened to be
+  default.
+- **An approved fix applies on the cluster it was raised FOR** — not whichever one the approver
+  (or a Telegram decision, which has no browser at all) happens to be on. Approving a fix for a
+  read-only cluster is refused with a clear sentence instead of failing on an RBAC error.
+- **The watchlist stays correct now that signatures carry a cluster and a namespace** — it joins
+  on the reason again, and never acts on a cluster VKE only observes.
+- **New doc: "The eight routes into VKE"** — the whole API + agent integration surface on one
+  page (OpenAI-compatible gateway · console chat · MCP · A2A).
+
 ## 1.6.46 · 2026-09-03
 
 - **VKE observes many clusters at once.** The connectivity stack lands: attach any number of
