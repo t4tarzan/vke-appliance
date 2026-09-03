@@ -1,5 +1,18 @@
 # VKE — Changelog
 
+## 1.6.48 · 2026-09-03
+
+- **Export a trained adapter to DKubeX's MinIO + ModelStudio** (ported from dkubeio). A finetuned
+  LoRA adapter can be pushed to the platform's MinIO bucket and registered with ModelStudio, so a
+  model trained in VKE lands where the rest of DKubeX can serve it. Off by default — appears only
+  when MinIO is provisioned (`minio.enabled` / `VKE_MINIO_PROVISIONED`); the Studio shows the
+  export affordance only when the platform is wired.
+- **New endpoints:** `POST /v1/finetune/export-dkubex/{job}` and `GET /v1/finetune/dkubex-status`
+  (the UI reads the latter to decide whether to offer the export). The console-driven export ships in
+  this cut; the trainer's end-of-training auto-upload degrades gracefully where its MinIO client isn't
+  present yet (the adapter is still saved locally and can be exported from the console) — the trainer
+  image update follows.
+
 ## 1.6.47 · 2026-09-03
 
 - **VKE speaks A2A — it plugs into an agent host like any other agent.** A new Agent2Agent

@@ -1,11 +1,8 @@
 {
-  "version": "1.6.47",
+  "version": "1.6.48",
   "date": "2026-09-03",
   "highlights": [
-    "VKE speaks A2A \u2014 it plugs into an agent host like any other agent.",
-    "Chat answers from the cluster you're looking at.",
-    "An approved fix applies on the cluster it was raised FOR",
-    "The watchlist stays correct now that signatures carry a cluster and a namespace",
-    "New doc: \"The eight routes into VKE\""
+    "Export a trained adapter to DKubeX's MinIO + ModelStudio",
+    "New endpoints:"
   ]
 }
