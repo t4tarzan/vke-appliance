@@ -1,5 +1,19 @@
 # VKE — Changelog
 
+## 1.6.50 · 2026-09-03
+
+- **ModelStudio now serves the trained model, not just registers it.** The MinIO export
+  previously uploaded only the PEFT adapter — tiny, but not servable on its own, so the
+  KServe deploy it registered had nothing to load. The trainer now also **merges the adapter
+  into its base once and uploads a full HF model** (weights + tokenizer + config) to
+  `vke/<base>/models/<job>/`, and ModelStudio registration **auto-points at that merged model
+  when present** (falling back to the adapter path otherwise). Result: a fine-tune trained in
+  VKE is deployed as a genuinely servable model on DKubeX. On by default when MinIO is
+  provisioned; `VKE_MINIO_UPLOAD_MERGED=false` keeps adapter-only (skips the merge
+  memory/disk on large models), and `VKE_MODELSTUDIO_STORAGE_KIND=merged|adapter` forces the
+  path. App + trainer aligned at 1.6.50 (the 1.6.47–1.6.49 cuts were app-only; the trainer
+  was last built at 1.6.48).
+
 ## 1.6.49 · 2026-09-03
 
 - **DKubeX export fixed + ModelStudio wired to the real API.** Two fixes to the MinIO/
