@@ -1,8 +1,7 @@
 {
-  "version": "1.6.48",
+  "version": "1.6.49",
   "date": "2026-09-03",
   "highlights": [
-    "Export a trained adapter to DKubeX's MinIO + ModelStudio",
-    "New endpoints:"
+    "DKubeX export fixed + ModelStudio wired to the real API."
   ]
 }

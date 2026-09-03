@@ -1,5 +1,17 @@
 # VKE — Changelog
 
+## 1.6.49 · 2026-09-03
+
+- **DKubeX export fixed + ModelStudio wired to the real API.** Two fixes to the MinIO/
+  ModelStudio export (ported in 1.6.48): (1) the console "Export to DKubeX" crashed with
+  `name 'io' is not defined` on any split-trainer install (app pod ≠ trainer pod, which is
+  every real DKubeX) — the missing `import io` is added; (2) ModelStudio registration now
+  targets this platform's **actual** API — `POST /api/ml-models/deploy` (KServe-style deploy
+  from object storage, ServiceAccount-token auth) instead of the donor code's non-existent
+  `/api/local-models/register`. Verified end to end on a live DKubeX: a real fine-tune now
+  uploads its LoRA adapter to MinIO **and** registers/deploys it in ModelStudio. All
+  ModelStudio parameters are overridable via `VKE_MODELSTUDIO_*` env for other versions.
+
 ## 1.6.48 · 2026-09-03
 
 - **Export a trained adapter to DKubeX's MinIO + ModelStudio** (ported from dkubeio). A finetuned
