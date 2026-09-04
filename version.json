@@ -1,7 +1,7 @@
 {
-  "version": "1.6.50",
+  "version": "1.6.51",
   "date": "2026-09-04",
   "highlights": [
-    "ModelStudio now serves the trained model, not just registers it."
+    "A2A skills now ground on live cluster state."
   ]
 }

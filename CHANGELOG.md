@@ -1,5 +1,16 @@
 # VKE — Changelog
 
+## 1.6.51 · 2026-09-04
+
+- **A2A skills now ground on live cluster state.** The A2A agent surface (Genie) advertises
+  its skills as "grounded on live cluster state", but the one-shot answer path
+  (`chat.ask_once`) had live-context injection hardcoded off — so it answered from the
+  fix-history RAG + persona only, and a plain "how many nodes/pods?" punted to a `kubectl`
+  suggestion. `ask_once` gains a `use_context` flag (default off — the console's
+  "Test the alias" affordance is unchanged) and the A2A `sre-chat`/`diagnose-incident` skills
+  pass it **on**, so a no-auth A2A call now returns the real live numbers (e.g. "1 node,
+  6 pods running") with citations.
+
 ## 1.6.50 · 2026-09-03
 
 - **ModelStudio now serves the trained model, not just registers it.** The MinIO export
