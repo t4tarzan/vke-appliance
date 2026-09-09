@@ -1,5 +1,25 @@
 # VKE — Changelog
 
+## 1.6.52 · 2026-09-10
+
+- **New `/genie` endpoint — the console's rich answer over the API.** `POST /genie`
+  (`/vke/genie` under base-path routing) returns the full console-parity answer as one JSON
+  response: the three sections (`rag` / `context` / `assessment`), a grounding `verdict`, clean
+  `citations`, the reasoned prose, and a ready-to-render `markdown` field — so a Genie-style tool
+  gets the rich structured answer over the API even though it was previously a UI-only concept.
+  No-auth demo lane, like `/a2a`. Backed by a new `chat.rich_answer()` (a non-streaming sibling of
+  `stream()` that reuses the SAME leaf helpers, so it's parity by construction). Fully additive:
+  `stream()`, `ask_once`, the OpenAI gateway, MCP, the `/a2a` default behaviour and the propose-fix
+  fence are all unchanged. Optional `VKE_A2A_RICH=on` (default off) routes the existing A2A
+  sre-chat / diagnose skills through the same rich markdown, for hosts wired to `/a2a`.
+- **Per-request `rich` toggle + a console "rich response" checkbox.** Richness is now controllable
+  per request, not just a global env: `/v1/chat/stream` and `/genie` take `rich` (default on), the
+  A2A lane honours `metadata.rich` (falling back to `VKE_A2A_RICH`), and the console chat gains a
+  **"rich response"** checkbox beside "live cluster context" (rich = the three-section answer; off =
+  a plain grounded answer). `rich=True` is byte-identical to prior behaviour. Rich turns now carry
+  **actor provenance** (`genie` / `a2a:<skill>`) so they're attributable in the event log for the
+  training/feedback loop.
+
 ## 1.6.51 · 2026-09-04
 
 - **A2A skills now ground on live cluster state.** The A2A agent surface (Genie) advertises

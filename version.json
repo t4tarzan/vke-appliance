@@ -1,7 +1,8 @@
 {
-  "version": "1.6.51",
-  "date": "2026-09-04",
+  "version": "1.6.52",
+  "date": "2026-09-10",
   "highlights": [
-    "A2A skills now ground on live cluster state."
+    "New `/genie` endpoint \u2014 the console's rich answer over the API.",
+    "Per-request `rich` toggle + a console \"rich response\" checkbox."
   ]
 }
