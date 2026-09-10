@@ -1,5 +1,22 @@
 # VKE — Changelog
 
+## 1.6.53 · 2026-09-10
+
+- **Training Studio — the continue/lineage base is carried through "Retrain +data".** An alias with a
+  run chain is pinned to the base its LoRA weights were trained on; the Studio now DERIVES that base
+  (never stores it), so estimate + launch send the lineage base instead of the §1 new-model pick. A §3
+  banner states the lock, and amber-vs-red notices distinguish "not in this install's catalog" (the
+  trainer resolves it at launch — fatal only air-gapped) from "the trainer reported its inventory and
+  this isn't in it" (authoritative). The continue-a-trained-model list (which had silently rendered
+  empty — nothing read `continue_jobs`) now works, each row carrying its lineage + a Retrain button.
+  Additive: the new-model flow and `_st.base` semantics are unchanged. (`/v1/finetune/bases` also
+  returns `trainer_bases:{known,models}` so the UI can tell "unknown inventory" from "positively
+  missing".)
+- **Clusters — the picker no longer shows two entries under one name.** The local entry is labelled
+  with `local_id()` (the cluster VKE runs in), not the request-scoped `current_id()` — so making a
+  remote cluster the default no longer renames the local entry to the remote's name and leaves the
+  local cluster unselectable by its own id.
+
 ## 1.6.52 · 2026-09-10
 
 - **New `/genie` endpoint — the console's rich answer over the API.** `POST /genie`

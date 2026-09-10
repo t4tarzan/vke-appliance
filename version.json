@@ -1,8 +1,8 @@
 {
-  "version": "1.6.52",
+  "version": "1.6.53",
   "date": "2026-09-10",
   "highlights": [
-    "New `/genie` endpoint \u2014 the console's rich answer over the API.",
-    "Per-request `rich` toggle + a console \"rich response\" checkbox."
+    "Training Studio \u2014 the continue/lineage base is carried through \"Retrain +data\".",
+    "Clusters \u2014 the picker no longer shows two entries under one name."
   ]
 }
