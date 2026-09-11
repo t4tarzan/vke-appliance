@@ -1,7 +1,9 @@
 {
-  "version": "1.6.54",
+  "version": "1.6.55",
   "date": "2026-09-11",
   "highlights": [
-    "Harden training + chat against the EKS pod-restart class (PR #57, additive)."
+    "The Training Studio now teaches BOTH sides of fine-tuning (SFT + RFT), additively.",
+    "RFT (preference) training arrives as a gated ORPO path \u2014 one run does SFT + preference together.",
+    "Two data-quality fixes"
   ]
 }

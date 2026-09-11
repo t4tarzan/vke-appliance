@@ -1,5 +1,26 @@
 # VKE — Changelog
 
+## 1.6.55 · 2026-09-11
+
+- **The Training Studio now teaches BOTH sides of fine-tuning (SFT + RFT), additively.** The §2 "Data"
+  step became a **curation cockpit** as rich as §3: selecting a dataset shows its profile (schema ·
+  fields/roles · distinct-answers · PII-vault · 3 samples) + a **Data-estimate card** (Composition ·
+  Coverage · Rows-that-fit · PII-safety gauges); a **shape-your-data** control (target · format ·
+  row-filter) with a **live preview** that flags label-shaped targets; and an **RFT-readiness panel**
+  showing the preference substrate (pair counts per source · reward coverage · exam size).
+- **RFT (preference) training arrives as a gated ORPO path — one run does SFT + preference together.**
+  A **pairing layer** (`build_preference_pairs`) assembles `{prompt, chosen, rejected}` from the
+  approve→outcome→verify loop (👍/👎 feedback · approved-vs-denied · verified-vs-unverified); §3 gains a
+  **Training method** selector (Supervised / Preference·ORPO). ORPO = NLL(chosen) + λ·odds-ratio in a
+  single objective, **no reference model** (fits memory-tight trainers) — proven on the GB10 (loss
+  4.42→3.50, adapter saved + served). **`method` defaults to `sft`, so every existing run is
+  byte-identical;** RFT is opt-in and lands on the container trainer (native MLX stays SFT-only).
+- **Two data-quality fixes** the readiness audit surfaced: `feedback.curate()` now HONORS 👍/👎 (only
+  up-votes become SFT positives; down-votes are kept for preference pairs), and `build_sre_history`
+  EXCLUDES the auto-harvest exam's held-out signatures (closes a train/test overlap).
+- New read-only endpoints: `/v1/datasets/{name}/estimate`, `/v1/datasets/{name}/preview`,
+  `/v1/datasets/preference`, `/v1/rft/readiness`, `/v1/rft/reward`.
+
 ## 1.6.54 · 2026-09-11
 
 - **Harden training + chat against the EKS pod-restart class (PR #57, additive).** On a memory-tight
