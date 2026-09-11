@@ -1,8 +1,7 @@
 {
-  "version": "1.6.53",
-  "date": "2026-09-10",
+  "version": "1.6.54",
+  "date": "2026-09-11",
   "highlights": [
-    "Training Studio \u2014 the continue/lineage base is carried through \"Retrain +data\".",
-    "Clusters \u2014 the picker no longer shows two entries under one name."
+    "Harden training + chat against the EKS pod-restart class (PR #57, additive)."
   ]
 }

@@ -1,5 +1,28 @@
 # VKE — Changelog
 
+## 1.6.54 · 2026-09-11
+
+- **Harden training + chat against the EKS pod-restart class (PR #57, additive).** On a memory-tight
+  autoscaled node, starting a run then opening chat could restart the whole pod — traced to the pod being
+  **Evicted under node memory pressure** (not OOMKilled, so no container blew its limit and the in-container
+  preflight never saw it). Four additive fixes, none changing existing behaviour:
+  - **SSE keepalive + disconnect-cancel** (`chat.with_keepalive`, applied to `/v1/chat/stream` and A2A
+    `message/stream`): `stream()` runs its whole grounding pass (up to 5 kubectl calls + an embedding model
+    swap + CPU prompt-eval) before the first token — 20–33s of dead air — which an ALB's 60s idle timeout
+    cuts, and each retry stacks another ollama generation. A `: keepalive` SSE comment (ignored by every
+    consumer) keeps the connection warm; a dropped client now cancels the ollama generation instead of
+    leaving it running.
+  - **Merge host-fit gate** (`train_lora.py`): the 1.6.50 merged-model upload loads a full base into host
+    RAM; on a memory-limited trainer a 7B base OOMKilled the container mid-run. Now estimates the base's
+    bf16 host cost from the safetensors headers (no load) and keeps adapter-only rather than crash if it
+    won't fit with margin.
+  - **Classify `Evicted`** (`telemetry._POD_RULES`, `cluster._OUTAGE_REASONS`, high severity) — VKE had a
+    rule only for `OOMKilled`, so it stayed silent through exactly these evictions.
+  - **Peak-mem metric fix** — the regex matched `GB` while the trainer emits `GiB`, so `peak_mem_gb` was
+    silently always absent.
+  - `test_hardening.py` (9 tests: keepalive passthrough/injection/SSE-comment-shape/exception-propagation/
+    disconnect-cancel + Evicted classification); suite 54 → 63.
+
 ## 1.6.53 · 2026-09-10
 
 - **Training Studio — the continue/lineage base is carried through "Retrain +data".** An alias with a
