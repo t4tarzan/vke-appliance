@@ -1,9 +1,8 @@
 {
-  "version": "1.6.55",
+  "version": "1.6.56",
   "date": "2026-09-11",
   "highlights": [
-    "The Training Studio now teaches BOTH sides of fine-tuning (SFT + RFT), additively.",
-    "RFT (preference) training arrives as a gated ORPO path \u2014 one run does SFT + preference together.",
-    "Two data-quality fixes"
+    "A killed run now says WHY (PR #58).",
+    "Refuse a base that can't fit BEFORE downloading it (PR #59)."
   ]
 }

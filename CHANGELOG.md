@@ -1,5 +1,17 @@
 # VKE — Changelog
 
+## 1.6.56 · 2026-09-11
+
+- **A killed run now says WHY (PR #58).** When a node is reclaimed under a training run — a
+  `helm upgrade` (the split trainer is strategy:Recreate), a Karpenter/spot reclaim, an OOM kill — the
+  Studio surfaces the trainer's plain-language reason instead of a bare "failed", so operators stop
+  debugging their dataset when the cause was their cluster. `job_status` carries the trainer's `error`.
+- **Refuse a base that can't fit BEFORE downloading it (PR #59).** The trainer now pre-checks the models
+  volume against the base's on-disk size (≈2× the parameter count in GiB) and refuses with a clear
+  message rather than fetching a ~14 GiB base onto a 9 GiB claim and dying mid-download; `prepare()` writes
+  the catalog `base_gb` into the job (optional — older trainers ignore it). The restart message also notes
+  the saved adapter is intact and relaunching the same alias resumes from it.
+
 ## 1.6.55 · 2026-09-11
 
 - **The Training Studio now teaches BOTH sides of fine-tuning (SFT + RFT), additively.** The §2 "Data"
