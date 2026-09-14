@@ -10,6 +10,9 @@
 #   · sample datasets ship inside (sre-pods 100-row set + the 50-row append set)
 #   · the cluster is a bundled synthetic snapshot (demo mode)
 # No accounts, no keys, nothing leaves the machine.
+# lean-main L2.2: `:latest` here is DELIBERATE — this shape updates through watchtower /
+# Settings -> Updates, which re-pulls the moving tag. The Helm chart, by contrast, pins
+# every image to its appVersion; a cluster never follows :latest.
 services:
   ollama:
     image: ghcr.io/t4tarzan/vke-ollama:latest

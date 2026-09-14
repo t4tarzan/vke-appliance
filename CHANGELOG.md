@@ -1,5 +1,40 @@
 # VKE — Changelog
 
+## 1.6.57 · 2026-09-14
+
+- **Sharper — one pinned version per shape, visible without a token.** `/health` now reports
+  `{status, app, version, shape}` unauthenticated (additive — 1.6.56 clients still parse; no field
+  removed). The chart pins the app + trainer image tags to its own `appVersion` instead of `:latest`,
+  so a default install can no longer drift between builds. `bin/fleet-versions.sh` prints version ·
+  shape · digest for every front + cluster in one screen (<30 s) and exits non-zero on skew — a release
+  gate (`--expect 1.6.57`).
+- **Better — a lean profile in the ONE chart.** `values-lean.yaml` / `values-lean-cpu.yaml` render a
+  single Deployment with two containers (app + serve-in-trainer via `VKE_SERVE_MODE=trainer`, no ollama)
+  while the DEFAULT render stays byte-identical (the only diff is the tag pin above). The lean trainer
+  seeds its bases from a PVC instead of baking them.
+- **Sealed — air-gap enforced in EVERY container.** `airgap.enabled` now injects `VKE_AIRGAP` /
+  `HF_HUB_OFFLINE` / `TRANSFORMERS_OFFLINE` into every container (was app-only — the trainer, the one
+  that downloads, had been unguarded). The chart renders a default-deny egress NetworkPolicy + a
+  SEALED/LEAK seal canary, both gated on `airgap.enabled` and off by default. Egress audit in
+  `docs/LEAN-SEAL-AUDIT.md`.
+- **Faster — trainer image diet.** The lean trainer drops baked bases (models via a seeded PVC + a
+  per-tag seed Job with a marker) → ~3.3 GB per reschedule vs ~11.7 GB; a `BAKE_GGUF` gate removes the
+  duplicate granite GGUF; `bin/pull-retry.sh` gives multi-GB GHCR pulls backoff + resume.
+- These bring the TIAA/dclawstack divergence *learnings* home to the generic product — never the code by
+  merge. Every fix-up became a mechanical guard: `docs/LEAN-GUARDS.md` (16 findings → guards),
+  `docs/VKE-TRACKS.md` (the four-track table), `docs/MAIN-TRACK-BASELINE.md` (measured, not remembered).
+- **Split mode: the trainer's forge is the authority on what can resume (PR #60).** After a
+  sidecar→`trainer.split=true` migration the trainer gets a new, empty claim while the old bases/adapters
+  stay on the models claim the app still mounts — so `resumes_from_adapter()` asking the app's own disk
+  answered about the wrong volume, and wrong in the dangerous direction: the app promised *"v2 on v1"*
+  while the trainer's fresh claim had nothing to resume from and the run silently trained v1 again. The
+  app now asks the trainer's new **`GET /adapters`** (the sibling of `/bases`), falling back to the local
+  check when nothing answers — so native/sidecar shapes, where the app's `/forge` *is* the trainer's, are
+  unchanged; `None` (did-not-say) is kept distinct from `[]` (has-nothing). `/v1/finetune/bases` reports
+  `orphaned_adapters` (adapters the app holds the trainer can't see — a positive answer means the
+  migration dropped data). New `docs/SPLIT-MIGRATION.md` (volume-by-volume, claim sizing, a
+  live-verified copy Job, and verifying from the trainer's view). Suite 63→72.
+
 ## 1.6.56 · 2026-09-11
 
 - **A killed run now says WHY (PR #58).** When a node is reclaimed under a training run — a

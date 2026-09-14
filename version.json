@@ -1,8 +1,11 @@
 {
-  "version": "1.6.56",
-  "date": "2026-09-11",
+  "version": "1.6.57",
+  "date": "2026-09-14",
   "highlights": [
-    "A killed run now says WHY (PR #58).",
-    "Refuse a base that can't fit BEFORE downloading it (PR #59)."
+    "Sharper \u2014 one pinned version per shape, visible without a token.",
+    "Better \u2014 a lean profile in the ONE chart.",
+    "Sealed \u2014 air-gap enforced in EVERY container.",
+    "Faster \u2014 trainer image diet.",
+    "Split mode: the trainer's forge is the authority on what can resume (PR #60)."
   ]
 }
